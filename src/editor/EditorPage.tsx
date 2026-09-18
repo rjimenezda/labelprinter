@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { decodePayload } from '../codec/decode'
 import { encodeDoc } from '../codec/encode'
 import { buildEditorHash } from '../router/route'
@@ -19,6 +19,7 @@ const URL_SYNC_DEBOUNCE_MS = 400
 export function EditorPage({ initialPayload }: { initialPayload?: string }) {
   const [zoom, setZoom] = useState(2)
   const [showShare, setShowShare] = useState(false)
+  const shareAnchorRef = useRef<HTMLDivElement>(null)
   const doc = useEditorStore((s) => s.doc)
   const undo = useEditorStore((s) => s.undo)
   const redo = useEditorStore((s) => s.redo)
@@ -48,6 +49,26 @@ export function EditorPage({ initialPayload }: { initialPayload?: string }) {
     }, URL_SYNC_DEBOUNCE_MS)
     return () => window.clearTimeout(t)
   }, [doc])
+
+  // Floating popover, not a modal: dismiss on an outside click or Escape,
+  // same as any other transient menu.
+  useEffect(() => {
+    if (!showShare) return
+    function onPointerDown(e: PointerEvent) {
+      if (shareAnchorRef.current && !shareAnchorRef.current.contains(e.target as Node)) {
+        setShowShare(false)
+      }
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setShowShare(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [showShare])
 
   return (
     <div className="lp-app-shell" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -85,13 +106,32 @@ export function EditorPage({ initialPayload }: { initialPayload?: string }) {
             value={zoom}
             onChange={(e) => setZoom(Number(e.target.value))}
           />
-          <button
-            onClick={() => setShowShare((v) => !v)}
-            aria-pressed={showShare}
-            style={{ marginLeft: 12, background: showShare ? ACCENT : undefined, color: showShare ? '#fff' : undefined }}
-          >
-            {showShare ? 'Hide print panel' : 'Show print panel'}
-          </button>
+          <div ref={shareAnchorRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowShare((v) => !v)}
+              aria-pressed={showShare}
+              style={{ marginLeft: 12, background: showShare ? ACCENT : undefined, color: showShare ? '#fff' : undefined }}
+            >
+              {showShare ? 'Hide print panel' : 'Show print panel'}
+            </button>
+            {showShare && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: 0,
+                  background: '#fff',
+                  border: '1px solid #ddd',
+                  borderRadius: 8,
+                  padding: 12,
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+                  zIndex: 20,
+                }}
+              >
+                <ShareUrl />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -100,8 +140,6 @@ export function EditorPage({ initialPayload }: { initialPayload?: string }) {
         <Canvas zoom={zoom} />
         <PropertiesPanel />
       </div>
-
-      {showShare && <ShareUrl />}
     </div>
   )
 }

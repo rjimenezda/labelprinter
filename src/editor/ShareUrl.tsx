@@ -27,41 +27,39 @@ export function ShareUrl() {
   }
 
   return (
-    <div style={{ padding: 12, borderTop: '1px solid #ddd', background: '#fafafa' }}>
-      <button
-        onClick={() => void handleCopy()}
-        title="Tap to copy the label URL"
-        style={{
-          position: 'relative',
-          padding: 0,
-          border: 'none',
-          background: 'none',
-          cursor: 'pointer',
-          lineHeight: 0,
-          display: 'block',
-        }}
-      >
-        <QrCode value={url} size={140} />
-        {copied && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#fff',
-              border: '1px solid #2a7a2a',
-              borderRadius: 4,
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#2a7a2a',
-            }}
-          >
-            Copied!
-          </div>
-        )}
-      </button>
-    </div>
+    <button
+      onClick={() => void handleCopy()}
+      title="Tap to copy the label URL"
+      style={{
+        position: 'relative',
+        padding: 0,
+        border: 'none',
+        background: 'none',
+        cursor: 'pointer',
+        lineHeight: 0,
+        display: 'block',
+      }}
+    >
+      <QrCode value={url} size={140} />
+      {copied && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#fff',
+            border: '1px solid #2a7a2a',
+            borderRadius: 4,
+            fontSize: 13,
+            fontWeight: 600,
+            color: '#2a7a2a',
+          }}
+        >
+          Copied!
+        </div>
+      )}
+    </button>
   )
 }
