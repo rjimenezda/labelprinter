@@ -58,7 +58,10 @@ export interface Item {
   /** Omitted = intrinsic content height (text wraps/grows naturally). */
   h?: number
   z: number
-  rot?: 0 | 90 | 180 | 270
+  /** Clockwise rotation in whole degrees, pivoting around the item's own
+   *  center (see render/LabelRoot.tsx). Normalized to [0, 360) on decode;
+   *  omitted or 0 means unrotated. */
+  rot?: number
   block: Block
 }
 

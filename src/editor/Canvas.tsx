@@ -4,6 +4,9 @@ import { LabelRoot } from '../render/LabelRoot'
 import { useEditorStore } from './store'
 
 const GRID_DOTS = 4
+// Distance from the item's top edge to the rotate handle's circle, in
+// screen pixels (not zoom-scaled dots -- this is a fixed-size UI affordance).
+const ROTATE_HANDLE_OFFSET = 32
 
 function snapToGrid(v: number): number {
   return Math.round(v / GRID_DOTS) * GRID_DOTS
@@ -22,12 +25,14 @@ export function Canvas({ zoom }: { zoom: number }) {
   const moveItemLive = useEditorStore((s) => s.moveItemLive)
   const resizeItemLive = useEditorStore((s) => s.resizeItemLive)
   const duplicateItem = useEditorStore((s) => s.duplicateItem)
-  const rotateItem = useEditorStore((s) => s.rotateItem)
+  const rotateItemLive = useEditorStore((s) => s.rotateItemLive)
   const removeItem = useEditorStore((s) => s.removeItem)
 
   const surfaceRef = useRef<HTMLDivElement>(null)
+  const boxRef = useRef<HTMLDivElement>(null)
   const drag = useRef<{ id: string; startX: number; startY: number; itemX: number; itemY: number } | null>(null)
   const resize = useRef<{ id: string; startX: number; startY: number; itemW: number; itemH: number } | null>(null)
+  const rotate = useRef<{ id: string } | null>(null)
 
   function onItemPointerDown(e: ReactPointerEvent, item: Item) {
     e.stopPropagation()
@@ -45,6 +50,14 @@ export function Canvas({ zoom }: { zoom: number }) {
     ;(e.target as Element).setPointerCapture(e.pointerId)
   }
 
+  function onRotateHandlePointerDown(e: ReactPointerEvent, item: Item) {
+    e.stopPropagation()
+    select(item.id)
+    beginGesture()
+    rotate.current = { id: item.id }
+    ;(e.target as Element).setPointerCapture(e.pointerId)
+  }
+
   function onPointerMove(e: ReactPointerEvent) {
     if (drag.current) {
       const dx = (e.clientX - drag.current.startX) / zoom
@@ -58,21 +71,37 @@ export function Canvas({ zoom }: { zoom: number }) {
       const w = Math.max(GRID_DOTS, snapToGrid(resize.current.itemW + dx))
       const h = Math.max(GRID_DOTS, snapToGrid(resize.current.itemH + dy))
       resizeItemLive(resize.current.id, w, h)
+    } else if (rotate.current) {
+      const item = doc.items.find((it) => it.id === rotate.current!.id)
+      const box = boxRef.current
+      if (item && box) {
+        const rect = box.getBoundingClientRect()
+        const centerX = rect.left + (item.x + item.w / 2) * zoom
+        const centerY = rect.top + (item.y + (item.h ?? 40) / 2) * zoom
+        // atan2's 0deg points along +x (right); the handle sits above the
+        // item's center (-y), so add 90 to make "pointer straight up" the
+        // zero-rotation position.
+        let deg = (Math.atan2(e.clientY - centerY, e.clientX - centerX) * 180) / Math.PI + 90
+        if (e.shiftKey) deg = Math.round(deg / 15) * 15
+        rotateItemLive(rotate.current.id, deg)
+      }
     }
   }
 
   function onPointerUp() {
     drag.current = null
     resize.current = null
+    rotate.current = null
   }
 
   // Also clear on cancel: touch browsers fire pointercancel (rather than
   // pointerup) when they decide to hand the gesture to something else
   // (e.g. a system back-swipe or an interrupting UI), which would
-  // otherwise leave drag/resize "stuck" for the next touch.
+  // otherwise leave drag/resize/rotate "stuck" for the next touch.
   function onPointerCancel() {
     drag.current = null
     resize.current = null
+    rotate.current = null
   }
 
   return (
@@ -89,6 +118,7 @@ export function Canvas({ zoom }: { zoom: number }) {
       onPointerDown={() => select(null)}
     >
       <div
+        ref={boxRef}
         style={{
           position: 'relative',
           width: doc.w * zoom,
@@ -130,11 +160,11 @@ export function Canvas({ zoom }: { zoom: number }) {
                 // stutter or never start on touch devices.
                 touchAction: 'none',
                 // Same transform LabelRoot applies to the item it wraps, so
-                // the selection border/resize handle visually track the
-                // rendered (possibly rotated) content instead of framing its
-                // unrotated footprint.
+                // the selection border/resize/rotate handles visually track
+                // the rendered (possibly rotated) content instead of
+                // framing its unrotated footprint.
                 transform: item.rot ? `rotate(${item.rot}deg)` : undefined,
-                transformOrigin: item.rot ? 'top left' : undefined,
+                transformOrigin: item.rot ? 'center' : undefined,
               }}
             >
               {item.id === selectedId && (
@@ -165,14 +195,56 @@ export function Canvas({ zoom }: { zoom: number }) {
                   />
                 </div>
               )}
+
+              {item.id === selectedId && (
+                <div
+                  role="button"
+                  aria-label="Rotate"
+                  onPointerDown={(e) => onRotateHandlePointerDown(e, item)}
+                  onDoubleClick={() => {
+                    beginGesture()
+                    rotateItemLive(item.id, 0)
+                  }}
+                  title="Drag to rotate -- hold Shift to snap to 15deg, double-click to reset"
+                  style={{
+                    position: 'absolute',
+                    left: '50%',
+                    top: -ROTATE_HANDLE_OFFSET,
+                    width: 32,
+                    height: ROTATE_HANDLE_OFFSET,
+                    transform: 'translateX(-50%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    cursor: 'grab',
+                    touchAction: 'none',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 14,
+                      height: 14,
+                      flexShrink: 0,
+                      borderRadius: '50%',
+                      background: '#2266ff',
+                      border: '2px solid #fff',
+                      boxShadow: '0 0 0 1px #2266ff',
+                    }}
+                  />
+                  <div style={{ width: 2, flex: 1, background: '#2266ff' }} />
+                </div>
+              )}
             </div>
 
             {item.id === selectedId && (
               <ItemToolbar
                 x={item.x * zoom}
-                y={item.y * zoom}
+                // Stacked above the rotate handle (itself above the item),
+                // so neither overlaps the other regardless of the item's
+                // current rotation (the handle rotates with the item; the
+                // toolbar deliberately doesn't, see its own doc comment).
+                top={item.y * zoom - ROTATE_HANDLE_OFFSET - TOOLBAR_GAP - TOOLBAR_HEIGHT}
                 onDuplicate={() => duplicateItem(item.id)}
-                onRotate={() => rotateItem(item.id)}
                 onDelete={() => removeItem(item.id)}
               />
             )}
@@ -187,23 +259,22 @@ const TOOLBAR_HEIGHT = 32
 const TOOLBAR_GAP = 6
 
 /**
- * Anchored to the item's unrotated top-left (x, y) rather than tracking
- * rotated content -- simple and correct for the common rot=0 case; for a
- * heavily rotated item the toolbar sits over the item's stored frame
- * rather than hugging its rotated visual footprint, which is an accepted
- * trade-off over the complexity of computing a rotated bounding box.
+ * Anchored to the item's unrotated top-left x (and a caller-computed top,
+ * stacked above the rotate handle) rather than tracking rotated content --
+ * simple and correct for the common rot=0 case; for a heavily rotated item
+ * the toolbar sits over the item's stored frame rather than hugging its
+ * rotated visual footprint, which is an accepted trade-off over the
+ * complexity of computing a rotated bounding box.
  */
 function ItemToolbar({
   x,
-  y,
+  top,
   onDuplicate,
-  onRotate,
   onDelete,
 }: {
   x: number
-  y: number
+  top: number
   onDuplicate: () => void
-  onRotate: () => void
   onDelete: () => void
 }) {
   return (
@@ -216,7 +287,7 @@ function ItemToolbar({
       style={{
         position: 'absolute',
         left: x,
-        top: y - TOOLBAR_HEIGHT - TOOLBAR_GAP,
+        top,
         display: 'flex',
         gap: 4,
         background: '#222',
@@ -229,9 +300,6 @@ function ItemToolbar({
     >
       <ToolbarButton title="Duplicate" onClick={onDuplicate}>
         ⧉
-      </ToolbarButton>
-      <ToolbarButton title="Rotate 90°" onClick={onRotate}>
-        ⟳
       </ToolbarButton>
       <ToolbarButton title="Delete" onClick={onDelete} danger>
         🗑

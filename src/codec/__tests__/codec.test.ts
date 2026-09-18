@@ -281,6 +281,33 @@ describe('encode/decode round trip', () => {
     }
   })
 
+  it('round-trips a continuous (non-multiple-of-90) item rotation', () => {
+    const doc: LabelDoc = {
+      v: 1,
+      w: 384,
+      h: 100,
+      items: [{ id: 'a', x: 0, y: 0, w: 100, z: 0, rot: 37, block: { t: 't', s: 'tilted' } }],
+    }
+    const payload = encodeDoc(doc)
+    const result = decodePayload(payload)
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.doc.items[0]!.rot).toBe(37)
+  })
+
+  it('normalizes an out-of-range item rotation into [0, 360), dropping a 0/360 result', () => {
+    const doc = {
+      v: 1,
+      w: 384,
+      h: 100,
+      items: [{ id: 'a', x: 0, y: 0, w: 100, z: 0, rot: 725.6, block: { t: 't', s: 'a' } }],
+    }
+    const payload = encodeDoc(doc as unknown as LabelDoc)
+    const result = decodePayload(payload)
+    expect(result.ok).toBe(true)
+    // 725.6 rounds to 726, 726 % 360 = 6
+    if (result.ok) expect(result.doc.items[0]!.rot).toBe(6)
+  })
+
   it('falls back to the default viewBox for a malformed vb value rather than trusting it', () => {
     const malformed = {
       v: 1,

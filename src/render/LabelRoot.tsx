@@ -44,8 +44,12 @@ export function LabelRoot({ doc }: LabelRootProps) {
               width: d(item.w),
               height: item.h !== undefined ? d(item.h) : undefined,
               zIndex: item.z,
+              // Pivots around the item's own center (not its x/y corner) --
+              // continuous rotation reads naturally that way, and it keeps
+              // an item's visual footprint centered on its stored box
+              // instead of swinging away from it.
               transform: item.rot ? `rotate(${item.rot}deg)` : undefined,
-              transformOrigin: item.rot ? 'top left' : undefined,
+              transformOrigin: item.rot ? 'center' : undefined,
             }}
           >
             {renderBlock(item.block, item.w, item.h)}

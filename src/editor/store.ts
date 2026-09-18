@@ -17,17 +17,10 @@ function recomputeHeight(doc: LabelDoc): number {
   return maxY
 }
 
-function nextRotation(rot: Item['rot']): Item['rot'] {
-  switch (rot ?? 0) {
-    case 0:
-      return 90
-    case 90:
-      return 180
-    case 180:
-      return 270
-    default:
-      return 0
-  }
+/** Normalizes a rotation to a whole degree in [0, 360); 0 collapses to
+ *  undefined, matching every other "unset means default" optional field. */
+function normalizeRotation(deg: number): Item['rot'] {
+  return (((Math.round(deg) % 360) + 360) % 360) || undefined
 }
 
 interface HistoryEntry {
@@ -49,19 +42,20 @@ interface EditorState {
    *  selects the clone. Returns the new item's id, or null if `id` no
    *  longer exists. */
   duplicateItem: (id: string) => string | null
-  /** Cycles an item's rotation clockwise in 90deg steps: 0 -> 90 -> 180 ->
-   *  270 -> 0. */
-  rotateItem: (id: string) => void
   select: (id: string | null) => void
   bringToFront: (id: string) => void
   sendToBack: (id: string) => void
 
-  /** Call once at the start of a drag/resize gesture -- snapshots the
-   *  current doc as a single undo step, so a continuous pointer drag
+  /** Call once at the start of a drag/resize/rotate gesture -- snapshots
+   *  the current doc as a single undo step, so a continuous pointer drag
    *  collapses to one history entry instead of one per frame. */
   beginGesture: () => void
   moveItemLive: (id: string, x: number, y: number) => void
   resizeItemLive: (id: string, w: number, h?: number) => void
+  /** Continuous rotation, in degrees -- any value, normalized to [0, 360).
+   *  Follows the same beginGesture()-then-many-calls pattern as
+   *  moveItemLive/resizeItemLive. */
+  rotateItemLive: (id: string, deg: number) => void
 
   undo: () => void
   redo: () => void
@@ -145,13 +139,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return newItemId
   },
 
-  rotateItem: (id) => {
-    set((state) => {
-      const items = state.doc.items.map((it) => (it.id === id ? { ...it, rot: nextRotation(it.rot) } : it))
-      return { doc: { ...state.doc, items }, past: withHistory(state), future: [] }
-    })
-  },
-
   select: (id) => set({ selectedId: id }),
 
   bringToFront: (id) => {
@@ -189,6 +176,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       const doc = { ...state.doc, items }
       doc.h = recomputeHeight(doc)
       return { doc }
+    })
+  },
+
+  rotateItemLive: (id, deg) => {
+    set((state) => {
+      const items = state.doc.items.map((it) => (it.id === id ? { ...it, rot: normalizeRotation(deg) } : it))
+      return { doc: { ...state.doc, items } }
     })
   },
 

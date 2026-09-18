@@ -104,23 +104,30 @@ describe('editor store', () => {
     expect(useEditorStore.getState().doc.items).toHaveLength(1)
   })
 
-  it('rotateItem cycles rotation clockwise through 0/90/180/270 and back to 0', () => {
+  it('rotateItemLive accepts any continuous angle, normalized to [0, 360)', () => {
     const id = useEditorStore.getState().addBlock({ t: 't', s: 'a' })
     expect(useEditorStore.getState().doc.items[0]!.rot).toBeUndefined()
-    useEditorStore.getState().rotateItem(id)
-    expect(useEditorStore.getState().doc.items[0]!.rot).toBe(90)
-    useEditorStore.getState().rotateItem(id)
-    expect(useEditorStore.getState().doc.items[0]!.rot).toBe(180)
-    useEditorStore.getState().rotateItem(id)
-    expect(useEditorStore.getState().doc.items[0]!.rot).toBe(270)
-    useEditorStore.getState().rotateItem(id)
-    expect(useEditorStore.getState().doc.items[0]!.rot).toBe(0)
+    useEditorStore.getState().rotateItemLive(id, 37)
+    expect(useEditorStore.getState().doc.items[0]!.rot).toBe(37)
+    useEditorStore.getState().rotateItemLive(id, 400)
+    expect(useEditorStore.getState().doc.items[0]!.rot).toBe(40)
+    useEditorStore.getState().rotateItemLive(id, -30)
+    expect(useEditorStore.getState().doc.items[0]!.rot).toBe(330)
+    useEditorStore.getState().rotateItemLive(id, 360)
+    expect(useEditorStore.getState().doc.items[0]!.rot).toBeUndefined()
   })
 
-  it('rotateItem is undoable', () => {
+  it('a rotate gesture (beginGesture + many rotateItemLive calls) collapses to one undo step', () => {
     const id = useEditorStore.getState().addBlock({ t: 't', s: 'a' })
-    useEditorStore.getState().rotateItem(id)
+    const pastAfterAdd = useEditorStore.getState().past.length
+
+    useEditorStore.getState().beginGesture()
+    for (let deg = 0; deg <= 90; deg += 5) {
+      useEditorStore.getState().rotateItemLive(id, deg)
+    }
+    expect(useEditorStore.getState().past.length).toBe(pastAfterAdd + 1)
     expect(useEditorStore.getState().doc.items[0]!.rot).toBe(90)
+
     useEditorStore.getState().undo()
     expect(useEditorStore.getState().doc.items[0]!.rot).toBeUndefined()
   })

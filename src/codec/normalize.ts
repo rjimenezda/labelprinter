@@ -138,7 +138,9 @@ export function normalizeDoc(json: unknown, warnings: DecodeWarning[]): LabelDoc
     const iw = isFiniteNumber(it.w) ? Math.round(it.w) : w
     const ih = isFiniteNumber(it.h) ? Math.round(it.h) : undefined
     const z = isFiniteNumber(it.z) ? it.z : 0
-    const rot = it.rot === 90 || it.rot === 180 || it.rot === 270 ? it.rot : undefined
+    // Normalize to a whole degree in [0, 360) -- 0 collapses to undefined,
+    // matching every other "unset means default" optional field here.
+    const rot = isFiniteNumber(it.rot) ? (((Math.round(it.rot) % 360) + 360) % 360 || undefined) : undefined
 
     const block = normalizeBlock(it.block, id, warnings)
     if (block) {
