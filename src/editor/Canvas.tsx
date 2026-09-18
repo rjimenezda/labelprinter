@@ -152,7 +152,7 @@ export function Canvas({ zoom }: { zoom: number }) {
                 top: item.y * zoom,
                 width: item.w * zoom,
                 height: (item.h ?? 40) * zoom,
-                border: item.id === selectedId ? `2px solid ${ACCENT}` : '2px solid transparent',
+                border: item.id === selectedId ? `1.5px dashed ${ACCENT}` : '1.5px solid transparent',
                 cursor: 'move',
                 boxSizing: 'border-box',
                 // Without this, touch browsers treat a finger-down-and-move
