@@ -1,0 +1,143 @@
+/*
+  Shared stylesheet for the TinyPrint probe pages.
+  Inlined via <style> in every probe (never <link> — one fewer
+  network dependency that could be mid-flight when the app captures).
+
+  Everything here follows from the 58mm roll: ~48mm / 384 dots printable.
+  Single column only. Never side-by-side key/value.
+*/
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  color: #000;
+  /* Load-bearing: if the app forces dark mode, an unstyled page can
+     print as a solid black rectangle. */
+  color-scheme: only light;
+}
+
+body {
+  width: 384px;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.pad {
+  padding: 0 8px;
+}
+
+/* ---- build stamp: first thing on every page, survives truncation ---- */
+.buildstamp {
+  background: #000;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 4px 8px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+.buildstamp .id {
+  font-size: 15px;
+}
+.buildstamp .ts {
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+/* ---- section headers: inverted full-bleed bars ---- */
+.bar {
+  background: #000;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  padding: 5px 8px;
+  margin-top: 10px;
+}
+
+/* ---- summary box: comes second, before detail ---- */
+.summary {
+  border: 2px solid #000;
+  margin: 6px 8px;
+  padding: 6px 8px;
+}
+.summary .row {
+  display: block;
+  padding: 2px 0;
+}
+.summary .k {
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  display: block;
+}
+.summary .v {
+  font-size: 18px;
+  font-weight: 700;
+  display: block;
+}
+
+/* ---- key/value readout blocks (single column, stacked) ---- */
+.kv {
+  padding: 4px 8px;
+  border-bottom: 1px dashed #000;
+}
+.kv .k {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: block;
+}
+.kv .v {
+  font-size: 15px;
+  font-family: "Courier New", monospace;
+  display: block;
+  word-break: break-all;
+  padding-left: 4px;
+}
+
+/* ---- yes/no markers: geometry survives, glyphs may not ---- */
+.yn {
+  display: inline-block;
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+  font-size: 14px;
+}
+.box {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #000;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.box.filled {
+  background: #000;
+}
+
+/* ---- monospace verbatim dump (URLs etc) ---- */
+.mono {
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  word-break: break-all;
+  padding: 4px 8px;
+  border: 1px solid #000;
+  margin: 4px 8px;
+}
+
+/* ---- section end marker ---- */
+.endmark {
+  border-top: 2px dashed #000;
+  margin-top: 8px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.footer-gap {
+  height: 40px;
+}

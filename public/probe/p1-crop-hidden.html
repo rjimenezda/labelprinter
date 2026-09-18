@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Cache-Control" content="no-store" />
+<meta name="viewport" content="width=384, initial-scale=1.0" />
+<title>P1 crop hidden</title>
+<link rel="stylesheet" href="probe.css" />
+<style>
+  /* body{overflow-x:hidden} set explicitly -- this is the invariant our
+     real renderer always applies. The .cropbar below is 420px, 36px
+     wider than the 384 viewport, and should be clipped at the edge. */
+  body { overflow-x: hidden; }
+  .cropbar { position: relative; width: 420px; height: 40px; background: #000; margin: 8px 0; }
+  .croplabel {
+    position: absolute; top: 13px; left: 8px; color: #fff; font-size: 12px;
+    font-family: "Courier New", monospace; white-space: nowrap;
+  }
+  .notch { position: absolute; top: 0; left: 384px; width: 10px; height: 100%; background: #fff; }
+</style>
+</head>
+<body>
+
+<div class="buildstamp">
+  <span class="id">PROBE P1-CROP &mdash; HIDDEN OVERFLOW</span><br/>
+  <span class="ts">BUILD 2026-09-11T17:13Z</span>
+</div>
+
+<div class="bar">Print this AND p1-crop-hidden.html, compare the two</div>
+<div class="summary">
+  <div class="row">
+    <span class="k">If the black bar fills the WHOLE paper and the white
+    notch sits near the RIGHT EDGE (~91% across)</span>
+    <span class="v">The app SCALES full content width down &mdash; any
+    horizontal overflow shrinks your whole label. Must always clip overflow
+    in the real renderer.</span>
+  </div>
+  <div class="row">
+    <span class="k">If the black bar is cut off and the notch is exactly
+    at the paper's right edge</span>
+    <span class="v">The app CROPS at the viewport width &mdash; overflowing
+    content is simply never printed, whole-label shrink risk is lower.</span>
+  </div>
+</div>
+
+<div class="bar">420px bar, notch at x=384 (viewport is meta-fixed to 384)</div>
+<div class="cropbar">
+  <span class="croplabel">&larr;&mdash;&mdash; 420px &mdash;&mdash;&rarr;</span>
+  <div class="notch"></div>
+</div>
+
+<div class="endmark">END P1-CROP-HIDDEN</div>
+<div class="footer-gap"></div>
+
+</body>
+</html>

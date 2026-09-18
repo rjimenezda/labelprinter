@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Cache-Control" content="no-store" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>P0 path</title>
+<link rel="stylesheet" href="../../probe.css" />
+</head>
+<body>
+
+<div class="buildstamp">
+  <span class="id">PROBE P0 &mdash; PATH</span><br/>
+  <span class="ts">BUILD 2026-09-11T17:01Z</span>
+</div>
+
+<div class="bar">Zero-JS proof</div>
+<div class="summary">
+  <div class="kv">
+    <span class="k">Result</span>
+    <span class="v">IF YOU CAN READ THIS PAGE AT ALL, the path segment
+    /TANGO-7f3a-KILO/ survived intact -- this file only exists at that
+    exact path. No JS required for this half of the test.</span>
+  </div>
+</div>
+
+<div class="bar">JS-driven echo (classic ES5 script)</div>
+<div class="kv"><span class="k">location.href</span><span class="v" id="js-href">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">location.pathname</span><span class="v" id="js-pathname">JS DID NOT RUN</span></div>
+
+<div class="bar">Full href, verbatim</div>
+<div class="mono" id="raw-href">JS DID NOT RUN</div>
+
+<div class="endmark">END P0-PATH</div>
+<div class="footer-gap"></div>
+
+<script>
+  try {
+    document.getElementById('js-href').innerHTML = String(location.href);
+    document.getElementById('js-pathname').innerHTML = String(location.pathname);
+    document.getElementById('raw-href').innerHTML = String(location.href);
+  } catch (e) {
+    document.getElementById('js-href').innerHTML = 'THREW: ' + e.message;
+  }
+</script>
+
+</body>
+</html>

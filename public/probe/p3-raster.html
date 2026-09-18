@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Cache-Control" content="no-store" />
+<meta name="viewport" content="width=384, initial-scale=1.0" />
+<title>P3 raster</title>
+<link rel="stylesheet" href="probe.css" />
+<style>
+  /* P0/P1 confirmed JS executes before capture, so this probe leans on JS
+     to generate its more repetitive sections (font ladder, availability
+     fingerprint) rather than hand-typing ~50 near-identical rows. The
+     canary tests below are pure CSS (media queries) -- no JS needed,
+     since they must reflect the real rendering environment, not a
+     feature-detection guess. */
+  body { overflow-x: hidden; }
+
+  /* -- canaries: default text assumes the "good" outcome; the media
+     query flips to the "bad" outcome only if it actually matches. -- */
+  .pcs-on, .fc-on, .pm-on { display: none; }
+  @media (prefers-color-scheme: dark) { .pcs-off { display: none; } .pcs-on { display: block; } }
+  @media (forced-colors: active)      { .fc-off  { display: none; } .fc-on  { display: block; } }
+  @media print                        { .pm-off  { display: none; } .pm-on  { display: block; } }
+
+  /* -- line combs -- */
+  .rule { background: #000; width: 100%; margin-top: 8px; }
+  .rulelabel { font-size: 9px; font-family: "Courier New", monospace; text-align: right; padding: 0 8px; }
+  .vrule-row { display: flex; align-items: stretch; height: 40px; margin: 4px 8px 0; }
+  .vrule { background: #000; height: 100%; margin-right: 20px; }
+  .vrule-labels { display: flex; margin: 2px 8px 0; }
+  .vrule-labels span { width: 20px; margin-right: 20px; font-size: 9px; font-family: "Courier New", monospace; text-align: center; }
+  .border-row { display: flex; margin: 4px 8px 0; }
+  .borderbox {
+    border-style: solid; border-color: #000; width: 40px; height: 40px; margin-right: 8px;
+    font-size: 9px; font-family: "Courier New", monospace; display: flex; align-items: flex-end; justify-content: center;
+  }
+
+  /* -- grayscale ramp -- */
+  .gray-patch { height: 20px; width: 100%; display: flex; align-items: center; padding-left: 8px; font-size: 10px; font-family: "Courier New", monospace; }
+
+  /* -- font ladder / fingerprint containers (filled by JS) -- */
+  #font-ladder .fam-header { margin-top: 6px; }
+  .fam-row { padding: 1px 8px; white-space: nowrap; }
+
+  /* -- inversion test -- */
+  .inv-bar { background: #000; color: #fff; padding: 6px 8px; margin: 4px 8px; }
+
+  /* -- vector primitives -- */
+  .prim-row { display: flex; align-items: center; gap: 0; margin: 4px 8px; }
+  .prim-row > * { margin-right: 16px; }
+</style>
+</head>
+<body>
+
+<div class="buildstamp">
+  <span class="id">PROBE P3 &mdash; RASTER QUALITY</span><br/>
+  <span class="ts">BUILD 2026-09-11T17:13Z</span>
+</div>
+
+<div class="summary">
+  <div class="row"><span class="k">This is the longest probe -- read it top to bottom</span>
+  <span class="v">Look for: which line widths vanish, whether greys dither or hard-threshold, whether fine patterns survive, and the smallest legible font size.</span></div>
+</div>
+
+<div class="bar">1. Canaries</div>
+<div class="kv">
+  <span class="k">prefers-color-scheme: dark</span>
+  <span class="v pcs-off">[n] not matched -- light mode assumed, good</span>
+  <span class="v pcs-on">[Y] MATCHED -- DARK MODE IS ACTIVE, must force light explicitly</span>
+</div>
+<div class="kv">
+  <span class="k">forced-colors: active</span>
+  <span class="v fc-off">[n] not matched</span>
+  <span class="v fc-on">[Y] MATCHED -- forced-colors mode is on, may recolor everything</span>
+</div>
+<div class="kv">
+  <span class="k">@media print stylesheet</span>
+  <span class="v pm-off">[n] not active -- capture is a screenshot, not print-to-PDF</span>
+  <span class="v pm-on">[Y] ACTIVE -- capture may be print-to-PDF (vector text possible!)</span>
+</div>
+
+<div class="bar">2a. Horizontal rules -- 0.5 / 1 / 1.5 / 2 / 3 / 4 px</div>
+<div class="rule" style="height:0.5px;"></div><div class="rulelabel">0.5px</div>
+<div class="rule" style="height:1px;"></div><div class="rulelabel">1px</div>
+<div class="rule" style="height:1.5px;"></div><div class="rulelabel">1.5px</div>
+<div class="rule" style="height:2px;"></div><div class="rulelabel">2px</div>
+<div class="rule" style="height:3px;"></div><div class="rulelabel">3px</div>
+<div class="rule" style="height:4px;"></div><div class="rulelabel">4px</div>
+
+<div class="bar">2b. Vertical rules -- same widths, left to right</div>
+<div class="vrule-row">
+  <div class="vrule" style="width:0.5px;"></div>
+  <div class="vrule" style="width:1px;"></div>
+  <div class="vrule" style="width:1.5px;"></div>
+  <div class="vrule" style="width:2px;"></div>
+  <div class="vrule" style="width:3px;"></div>
+  <div class="vrule" style="width:4px;"></div>
+</div>
+<div class="vrule-labels"><span>.5</span><span>1</span><span>1.5</span><span>2</span><span>3</span><span>4</span></div>
+
+<div class="bar">2c. Border boxes -- same widths</div>
+<div class="border-row">
+  <div class="borderbox" style="border-width:0.5px;">.5</div>
+  <div class="borderbox" style="border-width:1px;">1</div>
+  <div class="borderbox" style="border-width:1.5px;">1.5</div>
+  <div class="borderbox" style="border-width:2px;">2</div>
+  <div class="borderbox" style="border-width:3px;">3</div>
+  <div class="borderbox" style="border-width:4px;">4</div>
+</div>
+
+<div class="bar">2d. Diagonal 45&deg; lines -- same widths</div>
+<svg width="384" height="60" style="display:block;">
+  <line x1="10" y1="50" x2="60" y2="0" stroke="#000" stroke-width="0.5"/>
+  <line x1="70" y1="50" x2="120" y2="0" stroke="#000" stroke-width="1"/>
+  <line x1="130" y1="50" x2="180" y2="0" stroke="#000" stroke-width="1.5"/>
+  <line x1="190" y1="50" x2="240" y2="0" stroke="#000" stroke-width="2"/>
+  <line x1="250" y1="50" x2="300" y2="0" stroke="#000" stroke-width="3"/>
+  <line x1="310" y1="50" x2="360" y2="0" stroke="#000" stroke-width="4"/>
+</svg>
+
+<div class="bar">3. Grayscale ramp -- 17 steps, 0/16 to 16/16</div>
+<div class="gray-patch" style="background:#000000;color:#fff;">#000000 (0/16)</div>
+<div class="gray-patch" style="background:#101010;color:#fff;">#101010 (1/16)</div>
+<div class="gray-patch" style="background:#202020;color:#fff;">#202020 (2/16)</div>
+<div class="gray-patch" style="background:#303030;color:#fff;">#303030 (3/16)</div>
+<div class="gray-patch" style="background:#404040;color:#fff;">#404040 (4/16)</div>
+<div class="gray-patch" style="background:#505050;color:#fff;">#505050 (5/16)</div>
+<div class="gray-patch" style="background:#606060;color:#fff;">#606060 (6/16)</div>
+<div class="gray-patch" style="background:#707070;color:#fff;">#707070 (7/16)</div>
+<div class="gray-patch" style="background:#808080;color:#000;">#808080 (8/16, midpoint)</div>
+<div class="gray-patch" style="background:#8f8f8f;color:#000;">#8f8f8f (9/16)</div>
+<div class="gray-patch" style="background:#9f9f9f;color:#000;">#9f9f9f (10/16)</div>
+<div class="gray-patch" style="background:#afafaf;color:#000;">#afafaf (11/16)</div>
+<div class="gray-patch" style="background:#bfbfbf;color:#000;">#bfbfbf (12/16)</div>
+<div class="gray-patch" style="background:#cfcfcf;color:#000;">#cfcfcf (13/16)</div>
+<div class="gray-patch" style="background:#dfdfdf;color:#000;">#dfdfdf (14/16)</div>
+<div class="gray-patch" style="background:#efefef;color:#000;">#efefef (15/16)</div>
+<div class="gray-patch" style="background:#ffffff;color:#000;border-bottom:1px solid #000;">#ffffff (16/16)</div>
+<div style="height:24px;background:linear-gradient(to right,#000,#fff);margin:6px 8px 0;"></div>
+<div style="font-size:9px;font-family:monospace;padding:0 8px;">^ continuous ramp (same range as steps above)</div>
+
+<div class="bar">4. Dither / moir&eacute; patches (each 64&times;64 px, tiled)</div>
+<svg width="70" height="70" style="margin:4px 0 0 8px;">
+  <defs>
+    <pattern id="chk1" width="2" height="2" patternUnits="userSpaceOnUse">
+      <rect width="1" height="1" fill="#000"/><rect x="1" y="1" width="1" height="1" fill="#000"/>
+    </pattern>
+  </defs>
+  <rect width="64" height="64" fill="url(#chk1)"/>
+</svg>
+<div class="rulelabel" style="text-align:left;">^ 1px checkerboard</div>
+<svg width="70" height="70" style="margin:4px 0 0 8px;">
+  <defs>
+    <pattern id="chk2" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="2" height="2" fill="#000"/><rect x="2" y="2" width="2" height="2" fill="#000"/>
+    </pattern>
+  </defs>
+  <rect width="64" height="64" fill="url(#chk2)"/>
+</svg>
+<div class="rulelabel" style="text-align:left;">^ 2px checkerboard</div>
+<svg width="70" height="70" style="margin:4px 0 0 8px;">
+  <defs>
+    <pattern id="vstripe" width="2" height="64" patternUnits="userSpaceOnUse">
+      <rect width="1" height="64" fill="#000"/>
+    </pattern>
+  </defs>
+  <rect width="64" height="64" fill="url(#vstripe)"/>
+</svg>
+<div class="rulelabel" style="text-align:left;">^ 1px vertical stripes</div>
+<svg width="70" height="70" style="margin:4px 0 0 8px;">
+  <defs>
+    <pattern id="hstripe" width="64" height="2" patternUnits="userSpaceOnUse">
+      <rect width="64" height="1" fill="#000"/>
+    </pattern>
+  </defs>
+  <rect width="64" height="64" fill="url(#hstripe)"/>
+</svg>
+<div class="rulelabel" style="text-align:left;">^ 1px horizontal stripes</div>
+<svg width="70" height="70" style="margin:4px 0 0 8px;">
+  <defs>
+    <pattern id="diag2" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="2" height="4" fill="#000"/>
+    </pattern>
+  </defs>
+  <rect width="64" height="64" fill="url(#diag2)"/>
+</svg>
+<div class="rulelabel" style="text-align:left;">^ 2px diagonal stripes</div>
+<div style="display:flex;margin:4px 0 0 8px;">
+  <svg width="70" height="70">
+    <defs><pattern id="dot25" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="4" fill="#fff"/><rect width="2" height="2" fill="#000"/>
+    </pattern></defs>
+    <rect width="64" height="64" fill="url(#dot25)"/>
+  </svg>
+  <svg width="70" height="70">
+    <defs><pattern id="dot50" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="4" fill="#fff"/><rect width="2" height="2" fill="#000"/><rect x="2" y="2" width="2" height="2" fill="#000"/>
+    </pattern></defs>
+    <rect width="64" height="64" fill="url(#dot50)"/>
+  </svg>
+  <svg width="70" height="70">
+    <defs><pattern id="dot75" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="4" fill="#000"/><rect x="2" y="0" width="2" height="2" fill="#fff"/>
+    </pattern></defs>
+    <rect width="64" height="64" fill="url(#dot75)"/>
+  </svg>
+</div>
+<div class="rulelabel" style="text-align:left;">^ ordered dot fill: 25% / 50% / 75% black</div>
+
+<div class="bar">5. Font ladder &amp; availability fingerprint (JS-generated)</div>
+<div id="font-ladder">JS DID NOT RUN -- font ladder unavailable</div>
+<div class="bar">5b. Font availability fingerprint</div>
+<div id="font-fingerprint">JS DID NOT RUN</div>
+
+<div class="bar">6. Inversion (white-on-black) -- does thermal dot gain close up the letters?</div>
+<div class="inv-bar" style="font-size:14px;font-weight:400;">14px regular: Wg 0O 1lI 8B 5S</div>
+<div class="inv-bar" style="font-size:14px;font-weight:700;">14px bold: Wg 0O 1lI 8B 5S</div>
+<div class="inv-bar" style="font-size:18px;font-weight:400;">18px regular: Wg 0O 1lI 8B 5S</div>
+<div class="inv-bar" style="font-size:18px;font-weight:700;">18px bold: Wg 0O 1lI 8B 5S</div>
+<div class="inv-bar" style="font-size:24px;font-weight:700;">24px bold: Wg 0O 1lI 8B 5S</div>
+
+<div class="bar">7. Antialiasing (letter O + circle, hard vs fuzzy edges)</div>
+<div class="prim-row">
+  <span style="font-size:48px;">O</span>
+  <span style="display:inline-block;width:44px;height:44px;border-radius:50%;background:#000;"></span>
+  <span style="font-size:48px;text-rendering:geometricPrecision;-webkit-font-smoothing:none;">O</span>
+</div>
+<div class="rulelabel" style="text-align:left;">^ glyph / circle / glyph with smoothing disabled</div>
+
+<div class="bar">8. Vector primitives</div>
+<div class="prim-row">
+  <svg width="50" height="50"><rect x="4" y="4" width="42" height="42" fill="none" stroke="#000" stroke-width="1" shape-rendering="crispEdges"/></svg>
+  <svg width="50" height="50"><path d="M25 4 L46 46 L4 46 Z" fill="#000"/></svg>
+  <svg width="50" height="50"><text x="4" y="30" font-size="14" fill="#000">SVG</text></svg>
+  <canvas id="prim-canvas" width="50" height="50" style="border:1px solid #000;"></canvas>
+  <div style="width:44px;height:24px;border-radius:8px;background:#000;"></div>
+  <div style="transform:rotate(90deg);font-size:12px;font-family:monospace;">ROT90</div>
+</div>
+
+<div class="endmark">END P3-RASTER</div>
+<div class="footer-gap"></div>
+
+<script>
+try {
+  // -- 5/5b: font ladder + fingerprint, generated in JS to avoid
+  // hand-typing ~50 near-identical rows. --
+  var sizes = [8, 10, 12, 14, 16, 20, 24];
+  var families = [
+    { label: 'system-ui', css: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif' },
+    { label: 'Helvetica Neue', css: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+    { label: 'Georgia', css: 'Georgia, serif' },
+    { label: 'Courier New', css: '"Courier New", monospace' }
+  ];
+  var pangram = 'Wg 0O 1lI 8B 5S — abc 123';
+  var ladder = document.getElementById('font-ladder');
+  ladder.innerHTML = '';
+  for (var fi = 0; fi < families.length; fi++) {
+    var famHeader = document.createElement('div');
+    famHeader.className = 'kv fam-header';
+    famHeader.innerHTML = '<span class="k">Font: ' + families[fi].label + '</span>';
+    ladder.appendChild(famHeader);
+    for (var si = 0; si < sizes.length; si++) {
+      var rowR = document.createElement('div');
+      rowR.className = 'fam-row';
+      rowR.style.fontFamily = families[fi].css;
+      rowR.style.fontSize = sizes[si] + 'px';
+      rowR.style.fontWeight = '400';
+      rowR.textContent = sizes[si] + 'px reg: ' + pangram;
+      ladder.appendChild(rowR);
+      var rowB = document.createElement('div');
+      rowB.className = 'fam-row';
+      rowB.style.fontFamily = families[fi].css;
+      rowB.style.fontSize = sizes[si] + 'px';
+      rowB.style.fontWeight = '700';
+      rowB.textContent = sizes[si] + 'px bold: ' + pangram;
+      ladder.appendChild(rowB);
+    }
+  }
+
+  function measureWidth(fontFamily) {
+    var span = document.createElement('span');
+    span.style.position = 'absolute';
+    span.style.visibility = 'hidden';
+    span.style.whiteSpace = 'nowrap';
+    span.style.fontSize = '48px';
+    span.style.fontFamily = fontFamily;
+    span.textContent = 'the quick brown fox JUMPS 0123456789';
+    document.body.appendChild(span);
+    var w = span.offsetWidth;
+    document.body.removeChild(span);
+    return w;
+  }
+  var fallbackW = measureWidth('zzz-nonexistent-font-xyz, sans-serif');
+  var candidates = ['Helvetica Neue', 'Georgia', 'Courier New', 'Arial', 'Menlo', 'Avenir', 'American Typewriter', 'NonexistentFontXYZ'];
+  var fp = document.getElementById('font-fingerprint');
+  fp.innerHTML = '';
+  var fpNote = document.createElement('div');
+  fpNote.className = 'kv';
+  fpNote.innerHTML = '<span class="k">fallback (guaranteed-missing font) width</span><span class="v">' + fallbackW + 'px</span>';
+  fp.appendChild(fpNote);
+  for (var ci = 0; ci < candidates.length; ci++) {
+    var w = measureWidth('"' + candidates[ci] + '", zzz-nonexistent-font-xyz');
+    var row = document.createElement('div');
+    row.className = 'kv';
+    var verdict = (w === fallbackW) ? 'SAME AS FALLBACK -> likely NOT installed' : 'DISTINCT (' + w + 'px) -> likely installed';
+    row.innerHTML = '<span class="k">' + candidates[ci] + '</span><span class="v">' + verdict + '</span>';
+    fp.appendChild(row);
+  }
+
+  // -- 8: canvas primitive --
+  var cv = document.getElementById('prim-canvas');
+  if (cv && cv.getContext) {
+    var ctx = cv.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = '#000';
+    for (var gx = 0; gx < 50; gx += 5) { ctx.fillRect(gx, 0, 1, 50); }
+    for (var gy = 0; gy < 50; gy += 5) { ctx.fillRect(0, gy, 50, 1); }
+  }
+} catch (e) {
+  document.getElementById('font-ladder').innerHTML = 'THREW: ' + e.message;
+}
+</script>
+
+</body>
+</html>

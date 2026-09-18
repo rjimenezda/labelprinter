@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Cache-Control" content="no-store" />
+<meta name="viewport" content="width=384, initial-scale=1.0" />
+<title>P2 length</title>
+<link rel="stylesheet" href="probe.css" />
+</head>
+<body>
+
+<div class="buildstamp">
+  <span class="id">PROBE P2 &mdash; URL LENGTH</span><br/>
+  <span class="ts">BUILD 2026-09-13T10:35Z</span>
+</div>
+
+<div class="bar">What this tests</div>
+<div class="summary">
+  <div class="row">
+    <span class="k">Note</span>
+    <span class="v">Payload is a counter pattern (0000|0010|0020|...) ending
+    in the sentinel |END| -- read the tail below. If |END| is missing, the
+    URL got cut somewhere before reaching this page (paste field limit,
+    clipboard truncation, or a 404 on a broken URL).</span>
+  </div>
+</div>
+
+<div class="bar">Result</div>
+<div class="kv"><span class="k">Expected length (from hub)</span><span class="v" id="expected">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">RECEIVED LEN (location.hash.length - 1)</span><span class="v" id="received">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">Ends with sentinel?</span><span class="v" id="sentinel">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">Tail (last 60 chars received)</span><span class="v" id="tail" style="font-size:12px;">JS DID NOT RUN</span></div>
+
+<div class="bar">Zero-JS backstop</div>
+<div class="summary">
+  <p style="font-size:11px;">If JS did not run above, the raw href is the
+  only evidence available -- check the phone/app's own address bar or
+  share sheet for the URL it actually loaded, and compare its length to
+  what the hub generated.</p>
+</div>
+
+<div class="endmark">END P2-LEN</div>
+<div class="footer-gap"></div>
+
+<script>
+  try {
+    var hash = location.hash.length > 0 ? location.hash.slice(1) : '';
+    // The hub encodes "expectedLen" as a query param so this page can
+    // report expected-vs-received without hardcoding anything.
+    var params = (location.search || '').replace('?', '');
+    var expected = 'unknown';
+    if (params.indexOf('len=') === 0) {
+      expected = params.slice(4);
+    }
+    document.getElementById('expected').textContent = expected;
+    document.getElementById('received').textContent = String(hash.length);
+    var SENTINEL = '|END|';
+    var endsWithSentinel = hash.slice(-SENTINEL.length) === SENTINEL;
+    document.getElementById('sentinel').textContent = endsWithSentinel ? '[Y] YES -- URL arrived whole' : '[n] NO -- URL WAS TRUNCATED';
+    document.getElementById('tail').textContent = hash.length > 60 ? ('...' + hash.slice(-60)) : hash;
+  } catch (e) {
+    document.getElementById('received').textContent = 'THREW: ' + e.message;
+  }
+</script>
+
+</body>
+</html>

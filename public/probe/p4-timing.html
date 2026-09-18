@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Cache-Control" content="no-store" />
+<meta name="viewport" content="width=384, initial-scale=1.0" />
+<title>P4 timing</title>
+<link rel="stylesheet" href="probe.css" />
+<style>
+  body { overflow-x: hidden; }
+
+  .rafnum { font-size: 56px; font-weight: 700; text-align: center; padding: 8px 0; font-family: "Courier New", monospace; }
+
+  .ladder-row { padding: 3px 8px; font-family: "Courier New", monospace; font-size: 13px; }
+  .ladder-row .tag { display: inline-block; width: 70px; font-weight: 700; }
+  .ladder-row .state { visibility: hidden; animation: reveal 1ms linear forwards; }
+  .ladder-row .state.pre { visibility: visible; animation: none; }
+  @keyframes reveal { to { visibility: visible; } }
+  .d100  { animation-delay: .1s; }
+  .d250  { animation-delay: .25s; }
+  .d500  { animation-delay: .5s; }
+  .d1000 { animation-delay: 1s; }
+  .d2000 { animation-delay: 2s; }
+  .d4000 { animation-delay: 4s; }
+  .d8000 { animation-delay: 8s; }
+
+  .barfill { height: 10px; background: #000; width: 0; margin: 4px 8px; animation: growbar 8s linear forwards; }
+  @keyframes growbar { to { width: calc(100% - 16px); } }
+  .bartrack { height: 10px; background: #ddd; margin: 4px 8px -14px; }
+
+  /* -- extent section -- */
+  .ymarker { background: #000; color: #fff; font-weight: 700; font-size: 16px; text-align: center; padding: 6px 0; margin-top: 0; }
+  .fixedbox {
+    position: fixed; top: 4px; right: 4px; background: #000; color: #fff;
+    font-size: 11px; font-weight: 700; padding: 3px 6px; z-index: 999;
+  }
+  .stickybar {
+    position: sticky; top: 0; background: #000; color: #fff;
+    font-size: 11px; font-weight: 700; padding: 3px 6px; z-index: 998;
+  }
+</style>
+</head>
+<body>
+
+<div class="buildstamp">
+  <span class="id">PROBE P4 &mdash; TIMING &amp; EXTENT</span><br/>
+  <span class="ts">BUILD 2026-09-13T10:35Z</span>
+</div>
+
+<div class="summary">
+  <div class="row"><span class="k">Section 1</span><span class="v">Frozen number below = approx. capture instant (ms since page start)</span></div>
+  <div class="row"><span class="k">Section 4</span><span class="v">Read the LAST "Y=" marker still on the paper -- that's how much page height got captured</span></div>
+  <div class="row"><span class="k">Section 4</span><span class="v">Does "FIXED ELEMENT" appear once, or repeated down the strip?</span></div>
+</div>
+
+<div class="bar">1. Capture-instant clock (frozen ms since load)</div>
+<div class="rafnum" id="clock">000000</div>
+
+<div class="bar">2. CSS-only reveal ladder (no JS needed)</div>
+<div class="ladder-row"><span class="tag">T+0ms</span><span class="state pre">[Y] visible from the start</span></div>
+<div class="ladder-row"><span class="tag">T+100ms</span><span class="state d100">[Y] visible by 100ms</span></div>
+<div class="ladder-row"><span class="tag">T+250ms</span><span class="state d250">[Y] visible by 250ms</span></div>
+<div class="ladder-row"><span class="tag">T+500ms</span><span class="state d500">[Y] visible by 500ms</span></div>
+<div class="ladder-row"><span class="tag">T+1000ms</span><span class="state d1000">[Y] visible by 1s</span></div>
+<div class="ladder-row"><span class="tag">T+2000ms</span><span class="state d2000">[Y] visible by 2s</span></div>
+<div class="ladder-row"><span class="tag">T+4000ms</span><span class="state d4000">[Y] visible by 4s</span></div>
+<div class="ladder-row"><span class="tag">T+8000ms</span><span class="state d8000">[Y] visible by 8s</span></div>
+<p style="font-size:11px;color:#555;padding:0 8px;">Read the LAST row that's visible -- that's a lower bound on capture time, no JS required.</p>
+<div class="bartrack"></div>
+<div class="barfill"></div>
+<p style="font-size:10px;color:#555;padding:14px 8px 0;">^ continuous analogue: bar grows over 8s: how far it got = capture time</p>
+
+<div class="bar">3. Event ladder (JS)</div>
+<div class="kv"><span class="k">DOMContentLoaded</span><span class="v" id="ev-dcl">[n]</span></div>
+<div class="kv"><span class="k">window.load</span><span class="v" id="ev-load">[n]</span></div>
+<div class="kv"><span class="k">document.fonts.ready</span><span class="v" id="ev-fonts">[n]</span></div>
+<div class="kv"><span class="k">setTimeout(0)</span><span class="v" id="ev-t0">[n]</span></div>
+<div class="kv"><span class="k">setTimeout(2000)</span><span class="v" id="ev-t2000">[n]</span></div>
+<div class="kv"><span class="k">image set at T+1500ms, then onload</span><span class="v" id="ev-img">[n]</span></div>
+
+<div class="bar">4. Capture extent (page is ~3000px tall)</div>
+<div class="fixedbox">FIXED ELEMENT</div>
+<div class="stickybar">STICKY HEADER</div>
+<div class="ymarker">Y=0 (top)</div>
+<div style="height:230px"></div>
+<div class="ymarker">Y=250</div>
+<div style="height:230px"></div>
+<div class="ymarker">Y=500</div>
+<div style="height:230px"></div>
+<div class="ymarker">Y=750</div>
+<div style="height:230px"></div>
+<div class="ymarker">Y=1000</div>
+<div style="height:230px"></div>
+<div class="ymarker">Y=1250</div>
+<div style="height:230px"></div>
+<div class="ymarker">Y=1500</div>
+<div style="height:230px"></div>
+<div class="ymarker">Y=1750</div>
+<div style="height:230px"></div>
+<div class="ymarker">Y=2000</div>
+<div style="height:230px"></div>
+<div class="ymarker">Y=2250</div>
+<div style="height:230px"></div>
+<div class="ymarker">Y=2500</div>
+<div style="height:230px"></div>
+<div class="ymarker">Y=2750</div>
+<div style="height:230px"></div>
+<div class="ymarker" style="background:#000;">&#9733;&#9733;&#9733; Y=3000 BOTTOM OF PAGE &#9733;&#9733;&#9733;</div>
+
+<div class="endmark">END P4-TIMING</div>
+<div class="footer-gap"></div>
+
+<script>
+  try {
+    var start = (window.performance && performance.now) ? performance.now() : Date.now();
+    var clockEl = document.getElementById('clock');
+    function tick() {
+      var now = (window.performance && performance.now) ? performance.now() : Date.now();
+      clockEl.textContent = String(Math.round(now));
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('ev-dcl').textContent = '[Y] fired';
+    });
+    window.addEventListener('load', function () {
+      document.getElementById('ev-load').textContent = '[Y] fired';
+    });
+    if (window.document && document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function () {
+        document.getElementById('ev-fonts').textContent = '[Y] resolved';
+      });
+    } else {
+      document.getElementById('ev-fonts').textContent = 'UNAVAILABLE';
+    }
+    setTimeout(function () {
+      document.getElementById('ev-t0').textContent = '[Y] fired';
+    }, 0);
+    setTimeout(function () {
+      document.getElementById('ev-t2000').textContent = '[Y] fired';
+    }, 2000);
+    setTimeout(function () {
+      var img = new Image();
+      img.onload = function () {
+        document.getElementById('ev-img').textContent = '[Y] loaded (set at T+1500ms)';
+      };
+      img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7';
+    }, 1500);
+  } catch (e) {
+    document.getElementById('clock').textContent = 'ERR: ' + e.message;
+  }
+</script>
+
+</body>
+</html>

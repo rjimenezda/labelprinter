@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Cache-Control" content="no-store" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>P0 query</title>
+<link rel="stylesheet" href="probe.css" />
+</head>
+<body>
+
+<div class="buildstamp">
+  <span class="id">PROBE P0 &mdash; QUERY</span><br/>
+  <span class="ts">BUILD 2026-09-11T17:01Z</span>
+</div>
+
+<div class="bar">Note</div>
+<div class="summary">
+  <div class="kv">
+    <span class="k">Why this probe exists</span>
+    <span class="v">Query strings have no CSS :target equivalent -- this is JS-only. If the classic-script block below still says "JS DID NOT RUN", that alone tells you query survival too, since p0-hash's JS block failed identically.</span>
+  </div>
+</div>
+
+<div class="bar">JS-driven echo (classic ES5 script)</div>
+<div class="kv"><span class="k">location.href</span><span class="v" id="js-href">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">location.search</span><span class="v" id="js-search">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">location.search.length</span><span class="v" id="js-searchlen">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">location.hash</span><span class="v" id="js-hash">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">location.pathname</span><span class="v" id="js-pathname">JS DID NOT RUN</span></div>
+
+<div class="bar">Full href, verbatim</div>
+<div class="mono" id="raw-href">JS DID NOT RUN</div>
+
+<div class="endmark">END P0-QUERY</div>
+<div class="footer-gap"></div>
+
+<script>
+  try {
+    document.getElementById('js-href').innerHTML = String(location.href);
+    document.getElementById('js-search').innerHTML = String(location.search);
+    document.getElementById('js-searchlen').innerHTML = String(location.search.length);
+    document.getElementById('js-hash').innerHTML = location.hash ? String(location.hash) : '(empty)';
+    document.getElementById('js-pathname').innerHTML = String(location.pathname);
+    document.getElementById('raw-href').innerHTML = String(location.href);
+  } catch (e) {
+    document.getElementById('js-href').innerHTML = 'THREW: ' + e.message;
+  }
+</script>
+
+</body>
+</html>

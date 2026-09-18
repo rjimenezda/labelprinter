@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Cache-Control" content="no-store" />
+<meta name="viewport" content="width=384, initial-scale=1.0" />
+<title>P2 charset</title>
+<link rel="stylesheet" href="probe.css" />
+</head>
+<body>
+
+<div class="buildstamp">
+  <span class="id">PROBE P2 &mdash; CHARSET FIDELITY</span><br/>
+  <span class="ts">BUILD 2026-09-13T10:35Z</span>
+</div>
+
+<div class="bar">What this tests</div>
+<div class="summary">
+  <div class="row">
+    <span class="k">Primary (matters for our codec)</span>
+    <span class="v">The base64url alphabet (A-Za-z0-9-_) -- this is ALL our
+    codec ever emits. If this section shows 0 mismatches, the codec is safe.</span>
+  </div>
+  <div class="row">
+    <span class="k">Secondary (diagnostic only)</span>
+    <span class="v">A set of "risky" URL characters our codec never uses --
+    informative, not blocking, since we don't rely on them.</span>
+  </div>
+</div>
+
+<div class="bar">Result</div>
+<div class="kv"><span class="k">Base64url alphabet mismatches</span><span class="v" id="b64-mismatches" style="font-size:20px;font-weight:700;">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">Case preserved (Aa canary)?</span><span class="v" id="case-check">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">Risky-char mismatches (diagnostic)</span><span class="v" id="risky-mismatches">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">First 10 mismatches (index: expected -> received)</span><span class="v" id="mismatch-detail" style="font-size:11px;">JS DID NOT RUN</span></div>
+<div class="mono" id="raw-hash">JS DID NOT RUN</div>
+
+<div class="endmark">END P2-CHARSET</div>
+<div class="footer-gap"></div>
+
+<script>
+  // Must match the hub's construction of this URL EXACTLY.
+  var B64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  var CASE_CANARY = 'AaBbCcDd';
+  var RISKY = "~.!*'();:@&=+$,/?%#[]";
+  var EXPECTED = B64_ALPHABET + CASE_CANARY + RISKY;
+
+  try {
+    var received = location.hash.length > 0 ? location.hash.slice(1) : '';
+    document.getElementById('raw-hash').textContent = received;
+
+    var b64Len = B64_ALPHABET.length;
+    var caseLen = CASE_CANARY.length;
+
+    var b64Mismatches = 0;
+    var detail = [];
+    for (var i = 0; i < b64Len; i++) {
+      if (received[i] !== B64_ALPHABET[i]) {
+        b64Mismatches++;
+        if (detail.length < 10) detail.push(i + ': "' + B64_ALPHABET[i] + '" -> "' + received[i] + '"');
+      }
+    }
+    document.getElementById('b64-mismatches').textContent = String(b64Mismatches);
+
+    var caseOk = received.substr(b64Len, caseLen) === CASE_CANARY;
+    document.getElementById('case-check').textContent = caseOk ? '[Y] YES' : '[n] NO -- case was folded/changed';
+
+    var riskyStart = b64Len + caseLen;
+    var riskyMismatches = 0;
+    for (var j = 0; j < RISKY.length; j++) {
+      if (received[riskyStart + j] !== RISKY[j]) {
+        riskyMismatches++;
+        if (detail.length < 10) detail.push((riskyStart + j) + ': "' + RISKY[j] + '" -> "' + received[riskyStart + j] + '"');
+      }
+    }
+    document.getElementById('risky-mismatches').textContent = String(riskyMismatches);
+    document.getElementById('mismatch-detail').textContent = detail.length ? detail.join(' | ') : '(none)';
+  } catch (e) {
+    document.getElementById('b64-mismatches').textContent = 'THREW: ' + e.message;
+  }
+</script>
+
+</body>
+</html>

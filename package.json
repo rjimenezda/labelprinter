@@ -1,0 +1,39 @@
+{
+  "name": "labelprinter",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "print": "vite build && vite preview --host",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3",
+    "jsbarcode": "^3.12.3",
+    "qrcode": "^1.5.4",
+    "qrcode-generator": "^2.0.4",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@phosphor-icons/core": "^2.1.1",
+    "@types/node": "^24.13.3",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "canvas": "^3.2.3",
+    "jsdom": "^29.1.1",
+    "lucide-static": "^1.45.0",
+    "openmoji": "^17.0.0",
+    "oxlint": "^1.81.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0"
+  }
+}

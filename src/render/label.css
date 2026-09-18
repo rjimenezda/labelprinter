@@ -1,0 +1,77 @@
+/**
+ * The ONLY stylesheet the viewer loads. Self-contained (no external
+ * images, no webfonts, no @import) -- this is also what makes the SVG
+ * foreignObject-based print simulator possible later: the whole visual
+ * state of a label is this one file plus inline styles.
+ *
+ * 1-bit design rules, enforced here and by test/labelcss.contract.test.ts:
+ *   - exactly #000/#fff, no greys, no rgba/opacity/box-shadow/gradients/
+ *     filter/mix-blend-mode -- all of those become dither noise on
+ *     thermal paper instead of a clean threshold.
+ *   - no flex `gap` -- silent failure on older WebKit; components use
+ *     explicit margins instead.
+ *   - no :has()/:is()/:where(), nesting, @container, @layer, oklch()/
+ *     color-mix(), clamp()/min()/max(), logical properties, dvh/svh,
+ *     aspect-ratio -- all plausibly unsupported on an unknown WebView.
+ */
+
+.lp-root {
+  position: relative;
+  background: #ffffff;
+  color: #000000;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+}
+
+.lp-item {
+  position: absolute;
+  overflow: hidden;
+}
+
+.lp-text {
+  margin: 0;
+  padding: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  text-rendering: geometricPrecision;
+}
+
+.lp-text.inverted {
+  background: #000000;
+  color: #ffffff;
+  display: block;
+}
+
+.lp-rule {
+  background: #000000;
+}
+
+/* Dashed rules are drawn as literal repeated segments (see Rule.tsx), not
+   a CSS gradient trick -- keeps label.css free of any gradient function,
+   which the contract test below bans outright regardless of stop shape. */
+.lp-rule-dash {
+  display: inline-block;
+  background: #000000;
+}
+
+.lp-box {
+  box-sizing: border-box;
+  border-style: solid;
+  border-color: #000000;
+}
+
+.lp-box.filled {
+  background: #000000;
+  border: none;
+}
+
+.lp-placeholder {
+  box-sizing: border-box;
+  border: 2px dashed #000000;
+  font-family: "Courier New", monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+}

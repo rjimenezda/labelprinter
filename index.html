@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" id="lp-viewport-meta" />
+    <!--
+      Confirmed by probe P1 (2026-09-13): meta viewport width=384 gives an
+      exact 1:1 CSS-px-to-dot mapping in TinyPrint's WKWebView. But this one
+      index.html serves the editor, the hub, AND the viewer -- so the
+      correct viewport meta depends on which route the hash names, and it
+      has to be set before layout happens, not after React boots (a few
+      hundred ms is plenty of time for TinyPrint to have already started
+      capturing). Hence this plain, synchronous, ES5 script instead of
+      doing it from a React effect.
+    -->
+    <script>
+      (function () {
+        if (location.hash.indexOf('#/p/') === 0) {
+          var m = document.getElementById('lp-viewport-meta')
+          if (m) m.setAttribute('content', 'width=384, initial-scale=1.0')
+        }
+      })()
+    </script>
+    <title>labelprinter</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

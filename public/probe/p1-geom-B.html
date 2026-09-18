@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Cache-Control" content="no-store" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>P1 geom B</title>
+<!-- Variant B: width=device-width, initial-scale=1 -->
+<link rel="stylesheet" href="probe.css" />
+<style>
+  /* Override probe.css's fixed 384px body -- here we need the page to
+     span whatever the real layout viewport is, clipped rather than
+     allowed to expand (matches our real renderer's invariant). */
+  body { width: 100%; overflow-x: hidden; }
+
+  .ruler-wrap { position: relative; width: 100%; overflow: hidden; height: 58px; margin: 4px 0 0; }
+  .major-ticks {
+    position: absolute; top: 0; left: 0; width: 100%; height: 22px;
+    background-image: repeating-linear-gradient(to right, #000 0 2px, transparent 2px 50px);
+  }
+  .minor-ticks {
+    position: absolute; top: 22px; left: 0; width: 100%; height: 10px;
+    background-image: repeating-linear-gradient(to right, #000 0 1px, transparent 1px 10px);
+  }
+  .labels { position: absolute; top: 34px; left: 0; width: 100%; height: 14px; }
+  .labels span {
+    position: absolute; top: 0; font-size: 10px; font-family: "Courier New", monospace;
+  }
+
+  .mmbar {
+    background: #000; color: #fff; font-size: 10px; font-family: "Courier New", monospace;
+    height: 16px; line-height: 16px; padding-left: 4px; margin: 2px 8px; white-space: nowrap; overflow: hidden;
+  }
+
+  .vruler-wrap { position: relative; width: 130px; height: 800px; margin: 4px 8px; }
+  .vruler-major {
+    position: absolute; top: 0; left: 0; width: 20px; height: 100%;
+    background-image: repeating-linear-gradient(to bottom, #000 0 2px, transparent 2px 100px);
+  }
+  .vruler-minor {
+    position: absolute; top: 0; left: 24px; width: 10px; height: 100%;
+    background-image: repeating-linear-gradient(to bottom, #000 0 1px, transparent 1px 10px);
+  }
+  .vlabels { position: absolute; top: 0; left: 38px; width: 90px; height: 100%; }
+  .vlabels span { position: absolute; left: 0; font-size: 10px; font-family: "Courier New", monospace; }
+</style>
+</head>
+<body>
+
+<div class="buildstamp">
+  <span class="id">PROBE P1-B &mdash; GEOMETRY (width=device-width)</span><br/>
+  <span class="ts">BUILD 2026-09-11T17:13Z</span>
+</div>
+
+<div class="summary">
+  <div class="row"><span class="k">clientWidth = W (load-bearing)</span><span class="v" id="sum-cw">JS DID NOT RUN &mdash; read ruler below</span></div>
+  <div class="row"><span class="k">devicePixelRatio</span><span class="v" id="sum-dpr">JS DID NOT RUN</span></div>
+  <div class="row"><span class="k">dotsPerCssPx = 384 / W</span><span class="v" id="sum-dppx">compute from W above</span></div>
+</div>
+
+<div class="bar">1. Edge-tick ruler &mdash; read the LARGEST number still visible</div>
+<div class="ruler-wrap">
+  <div class="major-ticks"></div>
+  <div class="minor-ticks"></div>
+  <div class="labels">
+    <span style="left:0px">0</span><span style="left:50px">50</span><span style="left:100px">100</span>
+    <span style="left:150px">150</span><span style="left:200px">200</span><span style="left:250px">250</span>
+    <span style="left:300px">300</span><span style="left:350px">350</span><span style="left:384px">384</span>
+    <span style="left:400px">400</span><span style="left:450px">450</span><span style="left:500px">500</span>
+    <span style="left:550px">550</span><span style="left:600px">600</span><span style="left:650px">650</span>
+    <span style="left:700px">700</span><span style="left:750px">750</span><span style="left:800px">800</span>
+    <span style="left:850px">850</span><span style="left:900px">900</span><span style="left:950px">950</span>
+    <span style="left:1000px">1000</span>
+  </div>
+</div>
+
+<div class="bar">2. Millimetre bars &mdash; measure the 40mm bar with a ruler</div>
+<div class="mmbar" style="width:80px;">1px=1dot: 10mm</div>
+<div class="mmbar" style="width:160px;">1px=1dot: 20mm</div>
+<div class="mmbar" style="width:240px;">1px=1dot: 30mm</div>
+<div class="mmbar" style="width:320px;">1px=1dot: 40mm</div>
+
+<div class="bar">3. Vertical ruler &mdash; measure with a physical ruler, compare to horizontal</div>
+<div class="vruler-wrap">
+  <div class="vruler-major"></div>
+  <div class="vruler-minor"></div>
+  <div class="vlabels">
+    <span style="top:0px">0</span><span style="top:100px">100</span><span style="top:200px">200</span>
+    <span style="top:300px">300</span><span style="top:400px">400</span><span style="top:500px">500</span>
+    <span style="top:600px">600</span><span style="top:700px">700</span><span style="top:790px">800</span>
+  </div>
+</div>
+
+<div class="bar">4. JS readout</div>
+<div class="kv"><span class="k">document.documentElement.clientWidth</span><span class="v" id="cw">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">devicePixelRatio</span><span class="v" id="dpr">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">innerWidth / innerHeight</span><span class="v" id="inner">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">outerWidth / outerHeight</span><span class="v" id="outer">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">body.scrollWidth / scrollHeight</span><span class="v" id="scroll">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">screen.width / height / availWidth</span><span class="v" id="screen">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">visualViewport.width / .scale</span><span class="v" id="vv">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">matchMedia(resolution: 1dppx)</span><span class="v" id="mm1x">JS DID NOT RUN</span></div>
+<div class="kv"><span class="k">navigator.userAgent</span><span class="v" id="ua" style="font-size:9px;">JS DID NOT RUN</span></div>
+
+<div class="endmark">END P1-B</div>
+<div class="footer-gap"></div>
+
+<script>
+try {
+  var cw = document.documentElement.clientWidth;
+  var dpr = window.devicePixelRatio;
+  document.getElementById('cw').innerHTML = String(cw);
+  document.getElementById('sum-cw').innerHTML = String(cw);
+  document.getElementById('dpr').innerHTML = String(dpr);
+  document.getElementById('sum-dpr').innerHTML = String(dpr);
+  document.getElementById('sum-dppx').innerHTML = String(Math.round((384 / cw) * 1000) / 1000);
+  document.getElementById('inner').innerHTML = window.innerWidth + ' / ' + window.innerHeight;
+  document.getElementById('outer').innerHTML = window.outerWidth + ' / ' + window.outerHeight;
+  document.getElementById('scroll').innerHTML = document.body.scrollWidth + ' / ' + document.body.scrollHeight;
+  document.getElementById('screen').innerHTML = screen.width + ' / ' + screen.height + ' / ' + screen.availWidth;
+  if (window.visualViewport) {
+    document.getElementById('vv').innerHTML = window.visualViewport.width + ' / scale=' + window.visualViewport.scale;
+  } else {
+    document.getElementById('vv').innerHTML = 'UNAVAILABLE';
+  }
+  if (window.matchMedia) {
+    document.getElementById('mm1x').innerHTML = window.matchMedia('(resolution: 1dppx)').matches ? 'MATCH (1x)' : 'NO MATCH';
+  } else {
+    document.getElementById('mm1x').innerHTML = 'UNAVAILABLE';
+  }
+  document.getElementById('ua').innerHTML = navigator.userAgent;
+} catch (e) {
+  document.getElementById('cw').innerHTML = 'THREW: ' + e.message;
+}
+</script>
+
+</body>
+</html>

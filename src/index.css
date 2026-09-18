@@ -1,0 +1,42 @@
+:root {
+  /* Deliberately light-only: the editor/hub UI isn't designed with a dark
+     palette, and `light dark` here made native form controls (buttons,
+     inputs) pick up dark-mode UA text colors while our own inline styles
+     still forced light backgrounds -- invisible text until a hover/focus
+     state painted a colored background behind it. */
+  color-scheme: light;
+  color: #000;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  /* The editor manages its own internal scroll regions (canvas, side
+     panels); if the page itself is also scrollable, a touch-drag that
+     starts near an edge can rubber-band/scroll the whole page instead of
+     (or in addition to) doing the drag, even with touch-action: none on
+     the dragged element. Locking the page and letting only the intended
+     regions scroll avoids that fight. */
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+#root {
+  height: 100%;
+}
+
+/* Belt-and-suspenders: force readable text on native form controls
+   regardless of color-scheme, rather than relying on it alone. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  color: #000;
+}
