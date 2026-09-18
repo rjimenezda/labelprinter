@@ -67,9 +67,6 @@ export function EditorPage() {
           >
             {showShare ? 'Hide print panel' : 'Show print panel'}
           </button>
-          <a href="#/hub" style={{ fontSize: 12, marginLeft: 12 }}>
-            Probe hub
-          </a>
         </div>
       </div>
 
