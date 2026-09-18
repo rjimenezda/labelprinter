@@ -18,7 +18,7 @@ export function EditorPage() {
   const canRedo = useEditorStore((s) => s.future.length > 0)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div className="lp-app-shell" style={{ display: 'flex', flexDirection: 'column' }}>
       <div
         style={{
           display: 'flex',

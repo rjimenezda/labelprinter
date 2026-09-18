@@ -13,22 +13,28 @@
   box-sizing: border-box;
 }
 
-html,
 body {
   margin: 0;
-  height: 100%;
-  /* The editor manages its own internal scroll regions (canvas, side
-     panels); if the page itself is also scrollable, a touch-drag that
-     starts near an edge can rubber-band/scroll the whole page instead of
-     (or in addition to) doing the drag, even with touch-action: none on
-     the dragged element. Locking the page and letting only the intended
-     regions scroll avoids that fight. */
-  overflow: hidden;
-  overscroll-behavior: none;
 }
 
-#root {
-  height: 100%;
+/* Deliberately NOT applied to html/body/#root globally: the viewer route
+   renders nothing but the label itself (see render/LabelRoot.tsx), and its
+   page height must end up exactly the label's height -- nothing here may
+   force it taller, or a print capture that uses full document height
+   (see probe P4's stitched-capture notes) ends up with a huge blank tail.
+   Only the editor route opts into this via this class, on its own root
+   element -- it manages its own internal scroll regions (canvas, side
+   panels), so if the page itself is also scrollable, a touch-drag that
+   starts near an edge can rubber-band/scroll the whole page instead of
+   (or in addition to) doing the drag, even with touch-action: none on the
+   dragged element. Locking the page and letting only the intended regions
+   scroll avoids that fight. Two height declarations deliberately: dvh
+   isn't supported everywhere, vh is the fallback. */
+.lp-app-shell {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 /* Belt-and-suspenders: force readable text on native form controls
