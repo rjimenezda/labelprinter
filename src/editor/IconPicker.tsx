@@ -3,6 +3,7 @@ import type { IconEntry } from '../data/iconTypes'
 import { STROKE_DEFAULT } from '../render/tokens'
 import { ICON_LIBRARIES, type IconLibrary } from './iconLibraries'
 import { useEditorStore } from './store'
+import { ACCENT } from './theme'
 
 // Rendering all icons in a library at once (unfiltered) is unnecessary
 // DOM churn for a picker -- cap results and tell the user to narrow the
@@ -78,7 +79,7 @@ export function IconPicker() {
               padding: '3px 8px',
               borderRadius: 4,
               border: '1px solid #ccc',
-              background: lib.id === libraryId ? '#2266ff' : '#fff',
+              background: lib.id === libraryId ? ACCENT : '#fff',
               color: lib.id === libraryId ? '#fff' : undefined,
               cursor: 'pointer',
             }}

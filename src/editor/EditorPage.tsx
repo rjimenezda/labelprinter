@@ -7,6 +7,7 @@ import { Palette } from './Palette'
 import { PropertiesPanel } from './PropertiesPanel'
 import { ShareUrl } from './ShareUrl'
 import { useEditorStore } from './store'
+import { ACCENT } from './theme'
 
 // Doc changes fire on every pointermove during a drag/resize (see
 // Canvas.tsx's moveItemLive/resizeItemLive) -- re-encoding (JSON +
@@ -87,7 +88,7 @@ export function EditorPage({ initialPayload }: { initialPayload?: string }) {
           <button
             onClick={() => setShowShare((v) => !v)}
             aria-pressed={showShare}
-            style={{ marginLeft: 12, background: showShare ? '#2266ff' : undefined, color: showShare ? '#fff' : undefined }}
+            style={{ marginLeft: 12, background: showShare ? ACCENT : undefined, color: showShare ? '#fff' : undefined }}
           >
             {showShare ? 'Hide print panel' : 'Show print panel'}
           </button>

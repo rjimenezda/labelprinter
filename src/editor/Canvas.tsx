@@ -2,6 +2,7 @@ import { useRef, type PointerEvent as ReactPointerEvent, type ReactNode } from '
 import type { Item } from '../codec/types'
 import { LabelRoot } from '../render/LabelRoot'
 import { useEditorStore } from './store'
+import { ACCENT } from './theme'
 
 const GRID_DOTS = 4
 // Distance from the item's top edge to the rotate handle's circle, in
@@ -151,7 +152,7 @@ export function Canvas({ zoom }: { zoom: number }) {
                 top: item.y * zoom,
                 width: item.w * zoom,
                 height: (item.h ?? 40) * zoom,
-                border: item.id === selectedId ? '2px solid #2266ff' : '2px solid transparent',
+                border: item.id === selectedId ? `2px solid ${ACCENT}` : '2px solid transparent',
                 cursor: 'move',
                 boxSizing: 'border-box',
                 // Without this, touch browsers treat a finger-down-and-move
@@ -189,7 +190,7 @@ export function Canvas({ zoom }: { zoom: number }) {
                     style={{
                       width: 14,
                       height: 14,
-                      background: '#2266ff',
+                      background: ACCENT,
                       borderRadius: 3,
                     }}
                   />
@@ -226,12 +227,12 @@ export function Canvas({ zoom }: { zoom: number }) {
                       height: 14,
                       flexShrink: 0,
                       borderRadius: '50%',
-                      background: '#2266ff',
+                      background: ACCENT,
                       border: '2px solid #fff',
-                      boxShadow: '0 0 0 1px #2266ff',
+                      boxShadow: `0 0 0 1px ${ACCENT}`,
                     }}
                   />
-                  <div style={{ width: 2, flex: 1, background: '#2266ff' }} />
+                  <div style={{ width: 2, flex: 1, background: ACCENT }} />
                 </div>
               )}
             </div>
