@@ -11,6 +11,10 @@ import { useEditorStore } from './store'
 // warn from until we have a measured number.
 const SOFT_BUDGET_CHARS = 1200
 
+// Below this, the QR code speaks for itself -- the URL text, size meter,
+// and warning copy only earn their space once size is actually a concern.
+const WARN_THRESHOLD_CHARS = Math.round(SOFT_BUDGET_CHARS * 0.75)
+
 export function ShareUrl() {
   const doc = useEditorStore((s) => s.doc)
   const [copied, setCopied] = useState(false)
@@ -21,6 +25,7 @@ export function ShareUrl() {
     [payload],
   )
 
+  const nearLimit = info.payloadChars > WARN_THRESHOLD_CHARS
   const pct = Math.min(100, (info.payloadChars / SOFT_BUDGET_CHARS) * 100)
   const barColor = info.payloadChars <= 700 ? '#2a7a2a' : info.payloadChars <= SOFT_BUDGET_CHARS ? '#c98a00' : '#c00'
 
@@ -34,34 +39,69 @@ export function ShareUrl() {
     <div style={{ padding: 12, borderTop: '1px solid #ddd', background: '#fafafa' }}>
       <h3 style={{ fontSize: 12, textTransform: 'uppercase', color: '#888', margin: '0 0 8px' }}>Print this label</h3>
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-        <QrCode value={url} size={120} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              fontFamily: 'ui-monospace, monospace',
-              fontSize: 11,
-              wordBreak: 'break-all',
-              background: '#fff',
-              border: '1px solid #ddd',
-              borderRadius: 4,
-              padding: '4px 6px',
-              marginBottom: 6,
-              userSelect: 'all',
-            }}
-          >
-            {url}
+        <button
+          onClick={() => void handleCopy()}
+          title="Tap to copy the label URL"
+          style={{
+            position: 'relative',
+            padding: 0,
+            border: 'none',
+            background: 'none',
+            cursor: 'pointer',
+            lineHeight: 0,
+            flexShrink: 0,
+          }}
+        >
+          <QrCode value={url} size={120} />
+          {copied && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: '#fff',
+                border: '1px solid #2a7a2a',
+                borderRadius: 4,
+                fontSize: 13,
+                fontWeight: 600,
+                color: '#2a7a2a',
+              }}
+            >
+              Copied!
+            </div>
+          )}
+        </button>
+
+        {nearLimit ? (
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontFamily: 'ui-monospace, monospace',
+                fontSize: 11,
+                wordBreak: 'break-all',
+                background: '#fff',
+                border: '1px solid #ddd',
+                borderRadius: 4,
+                padding: '4px 6px',
+                marginBottom: 6,
+                userSelect: 'all',
+              }}
+            >
+              {url}
+            </div>
+            <div style={{ height: 6, background: '#eee', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ width: `${pct}%`, height: '100%', background: barColor }} />
+            </div>
+            <p style={{ fontSize: 11, color: '#888', margin: '4px 0 0' }}>
+              {info.payloadChars} chars payload ({info.codec === 'Z' ? 'compressed' : 'raw'}, {info.jsonBytes}B JSON)
+              {info.payloadChars > SOFT_BUDGET_CHARS ? ' -- getting long, QR may be harder to scan' : ''}
+            </p>
           </div>
-          <button onClick={handleCopy} style={{ marginBottom: 8 }}>
-            {copied ? 'Copied!' : 'Copy URL'}
-          </button>
-          <div style={{ height: 6, background: '#eee', borderRadius: 3, overflow: 'hidden' }}>
-            <div style={{ width: `${pct}%`, height: '100%', background: barColor }} />
-          </div>
-          <p style={{ fontSize: 11, color: '#888', margin: '4px 0 0' }}>
-            {info.payloadChars} chars payload ({info.codec === 'Z' ? 'compressed' : 'raw'}, {info.jsonBytes}B JSON)
-            {info.payloadChars > SOFT_BUDGET_CHARS ? ' -- getting long, QR may be harder to scan' : ''}
-          </p>
-        </div>
+        ) : (
+          <p style={{ flex: 1, minWidth: 0, fontSize: 12, color: '#888', margin: 0 }}>Tap the QR code to copy its URL.</p>
+        )}
       </div>
     </div>
   )
