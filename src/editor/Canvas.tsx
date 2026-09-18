@@ -1,4 +1,4 @@
-import { useRef, type PointerEvent as ReactPointerEvent } from 'react'
+import { useRef, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import type { Item } from '../codec/types'
 import { LabelRoot } from '../render/LabelRoot'
 import { useEditorStore } from './store'
@@ -21,6 +21,9 @@ export function Canvas({ zoom }: { zoom: number }) {
   const beginGesture = useEditorStore((s) => s.beginGesture)
   const moveItemLive = useEditorStore((s) => s.moveItemLive)
   const resizeItemLive = useEditorStore((s) => s.resizeItemLive)
+  const duplicateItem = useEditorStore((s) => s.duplicateItem)
+  const rotateItem = useEditorStore((s) => s.rotateItem)
+  const removeItem = useEditorStore((s) => s.removeItem)
 
   const surfaceRef = useRef<HTMLDivElement>(null)
   const drag = useRef<{ id: string; startX: number; startY: number; itemX: number; itemY: number } | null>(null)
@@ -109,56 +112,166 @@ export function Canvas({ zoom }: { zoom: number }) {
             LabelRoot's own DOM so the print-path markup never carries
             editor-only elements. */}
         {doc.items.map((item) => (
-          <div
-            key={item.id}
-            onPointerDown={(e) => onItemPointerDown(e, item)}
-            style={{
-              position: 'absolute',
-              left: item.x * zoom,
-              top: item.y * zoom,
-              width: item.w * zoom,
-              height: (item.h ?? 40) * zoom,
-              border: item.id === selectedId ? '2px solid #2266ff' : '2px solid transparent',
-              cursor: 'move',
-              boxSizing: 'border-box',
-              // Without this, touch browsers treat a finger-down-and-move
-              // on the item as a scroll/pan gesture and steal it before our
-              // pointermove handler sees a usable stream of events -- drags
-              // stutter or never start on touch devices.
-              touchAction: 'none',
-            }}
-          >
-            {item.id === selectedId && (
-              <div
-                onPointerDown={(e) => onHandlePointerDown(e, item)}
-                style={{
-                  position: 'absolute',
-                  right: -14,
-                  bottom: -14,
-                  // Larger than the visual handle so it's actually hittable
-                  // with a fingertip; the visual square stays centered in it.
-                  width: 28,
-                  height: 28,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'nwse-resize',
-                  touchAction: 'none',
-                }}
-              >
+          <div key={item.id}>
+            <div
+              onPointerDown={(e) => onItemPointerDown(e, item)}
+              style={{
+                position: 'absolute',
+                left: item.x * zoom,
+                top: item.y * zoom,
+                width: item.w * zoom,
+                height: (item.h ?? 40) * zoom,
+                border: item.id === selectedId ? '2px solid #2266ff' : '2px solid transparent',
+                cursor: 'move',
+                boxSizing: 'border-box',
+                // Without this, touch browsers treat a finger-down-and-move
+                // on the item as a scroll/pan gesture and steal it before our
+                // pointermove handler sees a usable stream of events -- drags
+                // stutter or never start on touch devices.
+                touchAction: 'none',
+                // Same transform LabelRoot applies to the item it wraps, so
+                // the selection border/resize handle visually track the
+                // rendered (possibly rotated) content instead of framing its
+                // unrotated footprint.
+                transform: item.rot ? `rotate(${item.rot}deg)` : undefined,
+                transformOrigin: item.rot ? 'top left' : undefined,
+              }}
+            >
+              {item.id === selectedId && (
                 <div
+                  onPointerDown={(e) => onHandlePointerDown(e, item)}
                   style={{
-                    width: 14,
-                    height: 14,
-                    background: '#2266ff',
-                    borderRadius: 3,
+                    position: 'absolute',
+                    right: -14,
+                    bottom: -14,
+                    // Larger than the visual handle so it's actually hittable
+                    // with a fingertip; the visual square stays centered in it.
+                    width: 28,
+                    height: 28,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'nwse-resize',
+                    touchAction: 'none',
                   }}
-                />
-              </div>
+                >
+                  <div
+                    style={{
+                      width: 14,
+                      height: 14,
+                      background: '#2266ff',
+                      borderRadius: 3,
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            {item.id === selectedId && (
+              <ItemToolbar
+                x={item.x * zoom}
+                y={item.y * zoom}
+                onDuplicate={() => duplicateItem(item.id)}
+                onRotate={() => rotateItem(item.id)}
+                onDelete={() => removeItem(item.id)}
+              />
             )}
           </div>
         ))}
       </div>
     </div>
+  )
+}
+
+const TOOLBAR_HEIGHT = 32
+const TOOLBAR_GAP = 6
+
+/**
+ * Anchored to the item's unrotated top-left (x, y) rather than tracking
+ * rotated content -- simple and correct for the common rot=0 case; for a
+ * heavily rotated item the toolbar sits over the item's stored frame
+ * rather than hugging its rotated visual footprint, which is an accepted
+ * trade-off over the complexity of computing a rotated bounding box.
+ */
+function ItemToolbar({
+  x,
+  y,
+  onDuplicate,
+  onRotate,
+  onDelete,
+}: {
+  x: number
+  y: number
+  onDuplicate: () => void
+  onRotate: () => void
+  onDelete: () => void
+}) {
+  return (
+    <div
+      // Stop pointerdown from reaching the canvas's own onPointerDown
+      // (select(null)) or the item overlay's drag handler underneath --
+      // otherwise tapping a button deselects (unmounting the toolbar)
+      // before its click ever fires.
+      onPointerDown={(e) => e.stopPropagation()}
+      style={{
+        position: 'absolute',
+        left: x,
+        top: y - TOOLBAR_HEIGHT - TOOLBAR_GAP,
+        display: 'flex',
+        gap: 4,
+        background: '#222',
+        borderRadius: 6,
+        padding: 4,
+        boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+        touchAction: 'none',
+        zIndex: 10,
+      }}
+    >
+      <ToolbarButton title="Duplicate" onClick={onDuplicate}>
+        ⧉
+      </ToolbarButton>
+      <ToolbarButton title="Rotate 90°" onClick={onRotate}>
+        ⟳
+      </ToolbarButton>
+      <ToolbarButton title="Delete" onClick={onDelete} danger>
+        🗑
+      </ToolbarButton>
+    </div>
+  )
+}
+
+function ToolbarButton({
+  title,
+  onClick,
+  danger,
+  children,
+}: {
+  title: string
+  onClick: () => void
+  danger?: boolean
+  children: ReactNode
+}) {
+  return (
+    <button
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+      style={{
+        width: 28,
+        height: 24,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: 'none',
+        borderRadius: 4,
+        background: 'transparent',
+        color: danger ? '#ff6b6b' : '#fff',
+        fontSize: 14,
+        lineHeight: 1,
+        cursor: 'pointer',
+      }}
+    >
+      {children}
+    </button>
   )
 }
