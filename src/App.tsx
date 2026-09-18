@@ -48,7 +48,7 @@ function App() {
 
   return (
     <Suspense fallback={null}>
-      <EditorPage />
+      <EditorPage initialPayload={route.k === 'editor' ? route.payload : undefined} />
     </Suspense>
   )
 }

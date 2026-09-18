@@ -9,7 +9,11 @@
  */
 
 export type Route =
-  | { k: 'editor' }
+  // `payload` here is the editor's OWN autosave state (#/e/...) -- distinct
+  // from the immutable #/p/ viewer link ShareUrl hands out, which is meant
+  // to keep pointing at the label as it was when shared, not follow later
+  // edits.
+  | { k: 'editor'; payload?: string }
   | { k: 'view'; payload: string }
   | { k: 'hub' }
   | { k: 'selftest' }
@@ -33,11 +37,21 @@ export function parseHash(hash: string): Route {
     return { k: 'view', payload: decoded }
   }
 
+  if (raw.startsWith('/e/')) {
+    const payload = raw.slice('/e/'.length)
+    const decoded = payload.includes('%') ? safeDecodeURIComponent(payload) : payload
+    return { k: 'editor', payload: decoded }
+  }
+
   return { k: 'notfound', raw }
 }
 
 export function buildViewerHash(payload: string): string {
   return `#/p/${payload}`
+}
+
+export function buildEditorHash(payload: string): string {
+  return `#/e/${payload}`
 }
 
 function safeDecodeURIComponent(s: string): string {

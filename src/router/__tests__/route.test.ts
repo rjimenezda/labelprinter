@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildViewerHash, parseHash } from '../route'
+import { buildEditorHash, buildViewerHash, parseHash } from '../route'
 
 describe('parseHash', () => {
   it('routes empty/root hash to the editor', () => {
@@ -35,5 +35,15 @@ describe('parseHash', () => {
   it('buildViewerHash round-trips through parseHash', () => {
     const payload = 'L1Zsomepayload-_123'
     expect(parseHash(buildViewerHash(payload))).toEqual({ k: 'view', payload })
+  })
+
+  it('extracts the editor autosave payload from #/e/', () => {
+    const payload = 'L1ZAbc123-_XYZ'
+    expect(parseHash(`#/e/${payload}`)).toEqual({ k: 'editor', payload })
+  })
+
+  it('buildEditorHash round-trips through parseHash', () => {
+    const payload = 'L1Zsomepayload-_123'
+    expect(parseHash(buildEditorHash(payload))).toEqual({ k: 'editor', payload })
   })
 })
