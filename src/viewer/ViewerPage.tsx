@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import { decodePayload } from '../codec/decode'
+import { getIconAttributions } from '../render/iconAttribution'
 import { LabelRoot } from '../render/LabelRoot'
+import { d } from '../render/units'
 
 /**
  * The whole point of the project: decode + render happen synchronously,
@@ -10,6 +12,7 @@ import { LabelRoot } from '../render/LabelRoot'
  */
 export function ViewerPage({ payload }: { payload: string }) {
   const result = useMemo(() => decodePayload(payload), [payload])
+  const attributions = useMemo(() => (result.ok ? getIconAttributions(result.doc) : []), [result])
 
   if (!result.ok) {
     return (
@@ -34,5 +37,25 @@ export function ViewerPage({ payload }: { payload: string }) {
     )
   }
 
-  return <LabelRoot doc={result.doc} />
+  return (
+    <>
+      <LabelRoot doc={result.doc} />
+      {attributions.length > 0 && (
+        <p
+          style={{
+            width: d(result.doc.w),
+            margin: 0,
+            padding: '2px 4px',
+            fontSize: 9,
+            lineHeight: 1.3,
+            color: '#000',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif',
+            boxSizing: 'border-box',
+          }}
+        >
+          {attributions.join(' -- ')}
+        </p>
+      )}
+    </>
+  )
 }
