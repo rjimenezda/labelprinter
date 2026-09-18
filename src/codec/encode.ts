@@ -25,27 +25,3 @@ export function encodeDoc(doc: LabelDoc): string {
 
   return zPayload.length <= jPayload.length ? zPayload : jPayload
 }
-
-/** Byte/char size breakdown, used by the editor's payload size meter. */
-export interface EncodeSizeInfo {
-  jsonBytes: number
-  zlibBytes: number
-  payloadChars: number
-  codec: 'Z' | 'J'
-}
-
-export function encodeDocWithInfo(doc: LabelDoc): { payload: string; info: EncodeSizeInfo } {
-  const jsonBytes = utf8Encode(JSON.stringify(doc))
-  const zBytes = zlibSync(jsonBytes, { level: 9 })
-  const payload = encodeDoc(doc)
-  const codec = payload[2] === 'Z' ? 'Z' : 'J'
-  return {
-    payload,
-    info: {
-      jsonBytes: jsonBytes.length,
-      zlibBytes: zBytes.length,
-      payloadChars: payload.length,
-      codec,
-    },
-  }
-}
