@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { decodePayload } from '../codec/decode'
 import { encodeDoc } from '../codec/encode'
 import { buildEditorHash } from '../router/route'
-import { SimPanel } from '../sim/SimPanel'
 import { Canvas } from './Canvas'
 import { Palette } from './Palette'
 import { PropertiesPanel } from './PropertiesPanel'
@@ -18,7 +17,6 @@ const URL_SYNC_DEBOUNCE_MS = 400
 
 export function EditorPage({ initialPayload }: { initialPayload?: string }) {
   const [zoom, setZoom] = useState(2)
-  const [showSim, setShowSim] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const doc = useEditorStore((s) => s.doc)
   const undo = useEditorStore((s) => s.undo)
@@ -87,16 +85,9 @@ export function EditorPage({ initialPayload }: { initialPayload?: string }) {
             onChange={(e) => setZoom(Number(e.target.value))}
           />
           <button
-            onClick={() => setShowSim((v) => !v)}
-            aria-pressed={showSim}
-            style={{ marginLeft: 12, background: showSim ? '#2266ff' : undefined, color: showSim ? '#fff' : undefined }}
-          >
-            {showSim ? 'Hide simulator' : 'Show simulator'}
-          </button>
-          <button
             onClick={() => setShowShare((v) => !v)}
             aria-pressed={showShare}
-            style={{ background: showShare ? '#2266ff' : undefined, color: showShare ? '#fff' : undefined }}
+            style={{ marginLeft: 12, background: showShare ? '#2266ff' : undefined, color: showShare ? '#fff' : undefined }}
           >
             {showShare ? 'Hide print panel' : 'Show print panel'}
           </button>
@@ -106,7 +97,6 @@ export function EditorPage({ initialPayload }: { initialPayload?: string }) {
       <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
         <Palette />
         <Canvas zoom={zoom} />
-        {showSim && <SimPanel doc={doc} />}
         <PropertiesPanel />
       </div>
 
