@@ -8,8 +8,8 @@ import { useEditorStore } from './store'
 
 export function EditorPage() {
   const [zoom, setZoom] = useState(2)
-  const [showSim, setShowSim] = useState(true)
-  const [showShare, setShowShare] = useState(true)
+  const [showSim, setShowSim] = useState(false)
+  const [showShare, setShowShare] = useState(false)
   const doc = useEditorStore((s) => s.doc)
   const undo = useEditorStore((s) => s.undo)
   const redo = useEditorStore((s) => s.redo)
