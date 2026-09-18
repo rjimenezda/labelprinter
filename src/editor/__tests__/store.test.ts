@@ -75,4 +75,53 @@ describe('editor store', () => {
     useEditorStore.getState().removeItem(idB)
     expect(useEditorStore.getState().selectedId).toBe(idA)
   })
+
+  it('duplicateItem clones the item with a new id, offset, and selects the clone', () => {
+    const id = useEditorStore.getState().addBlock({ t: 't', s: 'orig' }, { x: 8, y: 8 })
+    const newId = useEditorStore.getState().duplicateItem(id)
+    const state = useEditorStore.getState()
+    expect(newId).not.toBeNull()
+    expect(newId).not.toBe(id)
+    expect(state.doc.items).toHaveLength(2)
+    expect(state.selectedId).toBe(newId)
+    const clone = state.doc.items.find((it) => it.id === newId)!
+    expect(clone.x).toBeGreaterThan(8)
+    expect(clone.y).toBeGreaterThan(8)
+    expect((clone.block as { s: string }).s).toBe('orig')
+  })
+
+  it('duplicateItem returns null for an id that does not exist', () => {
+    expect(useEditorStore.getState().duplicateItem('nope')).toBeNull()
+  })
+
+  it('duplicateItem is a single undo step', () => {
+    const id = useEditorStore.getState().addBlock({ t: 't', s: 'orig' })
+    const pastAfterAdd = useEditorStore.getState().past.length
+    useEditorStore.getState().duplicateItem(id)
+    expect(useEditorStore.getState().past.length).toBe(pastAfterAdd + 1)
+    expect(useEditorStore.getState().doc.items).toHaveLength(2)
+    useEditorStore.getState().undo()
+    expect(useEditorStore.getState().doc.items).toHaveLength(1)
+  })
+
+  it('rotateItem cycles rotation clockwise through 0/90/180/270 and back to 0', () => {
+    const id = useEditorStore.getState().addBlock({ t: 't', s: 'a' })
+    expect(useEditorStore.getState().doc.items[0]!.rot).toBeUndefined()
+    useEditorStore.getState().rotateItem(id)
+    expect(useEditorStore.getState().doc.items[0]!.rot).toBe(90)
+    useEditorStore.getState().rotateItem(id)
+    expect(useEditorStore.getState().doc.items[0]!.rot).toBe(180)
+    useEditorStore.getState().rotateItem(id)
+    expect(useEditorStore.getState().doc.items[0]!.rot).toBe(270)
+    useEditorStore.getState().rotateItem(id)
+    expect(useEditorStore.getState().doc.items[0]!.rot).toBe(0)
+  })
+
+  it('rotateItem is undoable', () => {
+    const id = useEditorStore.getState().addBlock({ t: 't', s: 'a' })
+    useEditorStore.getState().rotateItem(id)
+    expect(useEditorStore.getState().doc.items[0]!.rot).toBe(90)
+    useEditorStore.getState().undo()
+    expect(useEditorStore.getState().doc.items[0]!.rot).toBeUndefined()
+  })
 })

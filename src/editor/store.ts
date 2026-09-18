@@ -17,6 +17,19 @@ function recomputeHeight(doc: LabelDoc): number {
   return maxY
 }
 
+function nextRotation(rot: Item['rot']): Item['rot'] {
+  switch (rot ?? 0) {
+    case 0:
+      return 90
+    case 90:
+      return 180
+    case 180:
+      return 270
+    default:
+      return 0
+  }
+}
+
 interface HistoryEntry {
   doc: LabelDoc
 }
@@ -32,6 +45,13 @@ interface EditorState {
   addBlock: (block: Block, at?: { x: number; y: number }) => string
   updateBlock: (id: string, patch: Record<string, unknown>) => void
   removeItem: (id: string) => void
+  /** Clones an item (new id, nudged position, brought to front) and
+   *  selects the clone. Returns the new item's id, or null if `id` no
+   *  longer exists. */
+  duplicateItem: (id: string) => string | null
+  /** Cycles an item's rotation clockwise in 90deg steps: 0 -> 90 -> 180 ->
+   *  270 -> 0. */
+  rotateItem: (id: string) => void
   select: (id: string | null) => void
   bringToFront: (id: string) => void
   sendToBack: (id: string) => void
@@ -107,6 +127,28 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         past: withHistory(state),
         future: [],
       }
+    })
+  },
+
+  duplicateItem: (id) => {
+    const s = get()
+    const source = s.doc.items.find((it) => it.id === id)
+    if (!source) return null
+    const newItemId = newId()
+    const maxZ = s.doc.items.reduce((m, it) => Math.max(m, it.z), -1)
+    const clone: Item = { ...source, id: newItemId, x: source.x + PAD_DEFAULT, y: source.y + PAD_DEFAULT, z: maxZ + 1 }
+    set((state) => {
+      const doc = { ...state.doc, items: [...state.doc.items, clone] }
+      doc.h = recomputeHeight(doc)
+      return { doc, selectedId: newItemId, past: withHistory(state), future: [] }
+    })
+    return newItemId
+  },
+
+  rotateItem: (id) => {
+    set((state) => {
+      const items = state.doc.items.map((it) => (it.id === id ? { ...it, rot: nextRotation(it.rot) } : it))
+      return { doc: { ...state.doc, items }, past: withHistory(state), future: [] }
     })
   },
 
