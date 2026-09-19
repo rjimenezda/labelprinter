@@ -56,6 +56,9 @@ interface EditorState {
    *  Follows the same beginGesture()-then-many-calls pattern as
    *  moveItemLive/resizeItemLive. */
   rotateItemLive: (id: string, deg: number) => void
+  /** Continuous pan/zoom crop update for an ImageBlock -- same
+   *  beginGesture()-then-many-calls pattern. No-op on a non-image item. */
+  cropItemLive: (id: string, crop: { s: number; ox: number; oy: number }) => void
 
   undo: () => void
   redo: () => void
@@ -182,6 +185,15 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   rotateItemLive: (id, deg) => {
     set((state) => {
       const items = state.doc.items.map((it) => (it.id === id ? { ...it, rot: normalizeRotation(deg) } : it))
+      return { doc: { ...state.doc, items } }
+    })
+  },
+
+  cropItemLive: (id, crop) => {
+    set((state) => {
+      const items = state.doc.items.map((it) =>
+        it.id === id && it.block.t === 'i' ? { ...it, block: { ...it.block, crop } } : it,
+      )
       return { doc: { ...state.doc, items } }
     })
   },

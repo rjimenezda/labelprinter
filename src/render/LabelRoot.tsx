@@ -38,6 +38,7 @@ export function LabelRoot({ doc }: LabelRootProps) {
           <div
             key={item.id}
             className="lp-item"
+            data-item-id={item.id}
             style={{
               left: d(item.x),
               top: d(item.y),

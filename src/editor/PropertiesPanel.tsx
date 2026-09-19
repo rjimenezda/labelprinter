@@ -195,13 +195,25 @@ function Fields({ item, onChange }: { item: Item; onChange: (patch: Record<strin
           <Field label="Image URL">
             <input style={inputStyle} value={block.d} onChange={(e) => onChange({ d: e.target.value })} />
           </Field>
-          <Field label="Fit">
-            <select style={inputStyle} value={block.fit ?? 'contain'} onChange={(e) => onChange({ fit: e.target.value })}>
-              <option value="contain">Contain (fit inside, may letterbox)</option>
-              <option value="cover">Cover (fill box, may crop)</option>
-              <option value="fill">Fill (stretch to box)</option>
-            </select>
-          </Field>
+          {block.crop ? (
+            <p style={{ fontSize: 11, color: '#888' }}>
+              Cropped on the canvas (the Crop tool in its floating toolbar) -- Fit is ignored while a crop is set.{' '}
+              <button
+                onClick={() => onChange({ crop: undefined })}
+                style={{ font: 'inherit', color: '#c00', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+              >
+                Reset crop
+              </button>
+            </p>
+          ) : (
+            <Field label="Fit">
+              <select style={inputStyle} value={block.fit ?? 'contain'} onChange={(e) => onChange({ fit: e.target.value })}>
+                <option value="contain">Contain (fit inside, may letterbox)</option>
+                <option value="cover">Cover (fill box, may crop)</option>
+                <option value="fill">Fill (stretch to box)</option>
+              </select>
+            </Field>
+          )}
           <p style={{ fontSize: 11, color: '#888' }}>
             Loaded directly from the URL, best-effort only -- no hosting or CORS workaround. If the URL blocks
             cross-origin loads or is unreachable, the image just won't show up.

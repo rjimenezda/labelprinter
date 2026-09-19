@@ -25,6 +25,10 @@
  *          icon, 0|1 (IconBlock) -- same "filled vs outline" concept,
  *          reused deliberately
  *   fit = contain | cover | fill (ImageBlock)
+ *   crop = { s, ox, oy }: cover-fit pan/zoom crop (ImageBlock) -- s is a
+ *          zoom factor >=1 (1 = default cover fit), ox/oy are a pan
+ *          offset as a fraction of the item box, each clamped to
+ *          [-(s-1)/2, (s-1)/2] so the frame always stays fully covered
  *   id = National Dex number (PokemonBlock)
  *   showName, showNumber = 0 | 1 (PokemonBlock)
  *   name = canonical icon name, e.g. "house" (IconBlock) -- editor UX
@@ -141,6 +145,10 @@ export interface ImageBlock {
   t: 'i'
   d: string
   fit?: 'contain' | 'cover' | 'fill'
+  /** In-place pan/zoom crop, set via the editor's on-canvas crop tool.
+   *  When present, overrides `fit` with cover-based pan/zoom (see the
+   *  reserved-keys note above and render/nodes/Image.tsx). */
+  crop?: { s: number; ox: number; oy: number }
 }
 
 /**
