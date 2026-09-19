@@ -28,6 +28,8 @@ export function Canvas({ zoom }: { zoom: number }) {
   const duplicateItem = useEditorStore((s) => s.duplicateItem)
   const rotateItemLive = useEditorStore((s) => s.rotateItemLive)
   const removeItem = useEditorStore((s) => s.removeItem)
+  const bringToFront = useEditorStore((s) => s.bringToFront)
+  const sendToBack = useEditorStore((s) => s.sendToBack)
 
   const surfaceRef = useRef<HTMLDivElement>(null)
   const boxRef = useRef<HTMLDivElement>(null)
@@ -246,6 +248,8 @@ export function Canvas({ zoom }: { zoom: number }) {
                 // toolbar deliberately doesn't, see its own doc comment).
                 top={item.y * zoom - ROTATE_HANDLE_OFFSET - TOOLBAR_GAP - TOOLBAR_HEIGHT}
                 onDuplicate={() => duplicateItem(item.id)}
+                onFront={() => bringToFront(item.id)}
+                onBack={() => sendToBack(item.id)}
                 onDelete={() => removeItem(item.id)}
               />
             )}
@@ -271,11 +275,15 @@ function ItemToolbar({
   x,
   top,
   onDuplicate,
+  onFront,
+  onBack,
   onDelete,
 }: {
   x: number
   top: number
   onDuplicate: () => void
+  onFront: () => void
+  onBack: () => void
   onDelete: () => void
 }) {
   return (
@@ -301,6 +309,12 @@ function ItemToolbar({
     >
       <ToolbarButton title="Duplicate" onClick={onDuplicate}>
         ⧉
+      </ToolbarButton>
+      <ToolbarButton title="Bring to front" onClick={onFront}>
+        ⬆
+      </ToolbarButton>
+      <ToolbarButton title="Send to back" onClick={onBack}>
+        ⬇
       </ToolbarButton>
       <ToolbarButton title="Delete" onClick={onDelete} danger>
         🗑

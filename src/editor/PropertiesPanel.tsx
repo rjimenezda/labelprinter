@@ -21,9 +21,6 @@ export function PropertiesPanel() {
   const doc = useEditorStore((s) => s.doc)
   const selectedId = useEditorStore((s) => s.selectedId)
   const updateBlock = useEditorStore((s) => s.updateBlock)
-  const removeItem = useEditorStore((s) => s.removeItem)
-  const bringToFront = useEditorStore((s) => s.bringToFront)
-  const sendToBack = useEditorStore((s) => s.sendToBack)
 
   const item = doc.items.find((it) => it.id === selectedId)
 
@@ -39,13 +36,6 @@ export function PropertiesPanel() {
     <div style={{ width: 260, padding: 12, borderLeft: '1px solid #ddd', overflowY: 'auto' }}>
       <h3 style={{ fontSize: 12, textTransform: 'uppercase', color: '#888', margin: '0 0 8px' }}>Properties</h3>
       <Fields item={item} onChange={(patch) => updateBlock(item.id, patch)} />
-      <div style={{ marginTop: 12, display: 'flex', gap: 6 }}>
-        <button onClick={() => bringToFront(item.id)}>Front</button>
-        <button onClick={() => sendToBack(item.id)}>Back</button>
-        <button onClick={() => removeItem(item.id)} style={{ color: '#c00' }}>
-          Delete
-        </button>
-      </div>
     </div>
   )
 }
