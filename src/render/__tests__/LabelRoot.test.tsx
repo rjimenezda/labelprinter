@@ -67,6 +67,22 @@ describe('LabelRoot', () => {
     expect(html).not.toContain('#0025')
   })
 
+  it('applies a pan/zoom crop to Pokemon artwork within its own fixed-height frame, separate from the caption', () => {
+    const withCrop: LabelDoc = {
+      v: 1,
+      w: 200,
+      h: 200,
+      items: [
+        { id: 'poke', x: 0, y: 0, w: 120, z: 0, block: { t: 'p', id: 25, crop: { s: 1.5, ox: 0.1, oy: -0.2, h: 90 } } },
+      ],
+    }
+    const html = renderToStaticMarkup(<LabelRoot doc={withCrop} />)
+    expect(html).toContain('translate(10%, -20%) scale(1.5)')
+    // The image sits in its own fixed-height, clipped sub-box (the
+    // caption's height isn't part of the crop frame).
+    expect(html).toMatch(/height:90px[^>]*overflow:hidden/)
+  })
+
   it('renders an icon block as inline SVG with our own stroke/color, not the source markup', () => {
     const withIcon: LabelDoc = {
       v: 1,

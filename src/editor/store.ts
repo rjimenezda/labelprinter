@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Block, Item, LabelDoc } from '../codec/types'
+import type { Block, ImageCrop, Item, LabelDoc } from '../codec/types'
 import { DEFAULT_WIDTH_DOTS } from '../codec/types'
 import { PAD_DEFAULT } from '../render/tokens'
 import { computeItemSize } from './itemSize'
@@ -56,9 +56,12 @@ interface EditorState {
    *  Follows the same beginGesture()-then-many-calls pattern as
    *  moveItemLive/resizeItemLive. */
   rotateItemLive: (id: string, deg: number) => void
-  /** Continuous pan/zoom crop update for an ImageBlock -- same
-   *  beginGesture()-then-many-calls pattern. No-op on a non-image item. */
-  cropItemLive: (id: string, crop: { s: number; ox: number; oy: number }) => void
+  /** Continuous pan/zoom crop update -- same beginGesture()-then-many-calls
+   *  pattern. Works on any block with a `crop` field (ImageBlock,
+   *  PokemonBlock); no-op on a block that doesn't have one. The caller is
+   *  responsible for the right shape per block type (PokemonBlock's also
+   *  carries `h`, see codec/types.ts's `crop` doc). */
+  cropItemLive: (id: string, crop: ImageCrop | (ImageCrop & { h: number })) => void
 
   undo: () => void
   redo: () => void
@@ -191,9 +194,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   cropItemLive: (id, crop) => {
     set((state) => {
-      const items = state.doc.items.map((it) =>
-        it.id === id && it.block.t === 'i' ? { ...it, block: { ...it.block, crop } } : it,
-      )
+      const items = state.doc.items.map((it) => {
+        if (it.id !== id) return it
+        if (it.block.t !== 'i' && it.block.t !== 'p') return it
+        return { ...it, block: { ...it.block, crop } as Block }
+      })
       return { doc: { ...state.doc, items } }
     })
   },

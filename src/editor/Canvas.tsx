@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
-import type { Item } from '../codec/types'
+import type { ImageCrop, Item } from '../codec/types'
 import { LabelRoot } from '../render/LabelRoot'
 import { useEditorStore } from './store'
 import { ACCENT } from './theme'
@@ -15,6 +15,31 @@ function snapToGrid(v: number): number {
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v))
+}
+
+/** The crop tool is cross-cutting: it works on any block with a `crop`
+ *  field (currently ImageBlock and PokemonBlock's artwork), never on
+ *  text/QR/barcode/rule/box/icon items -- see codec/types.ts's `crop`
+ *  doc. */
+function getCrop(item: Item): ImageCrop | undefined {
+  return item.block.t === 'i' || item.block.t === 'p' ? item.block.crop : undefined
+}
+
+/** Height (dots) of the crop frame -- the whole item box for ImageBlock,
+ *  but only the artwork sub-box for PokemonBlock (its crop.h), since the
+ *  name/number caption sits below the artwork, outside the frame. */
+function cropFrameH(item: Item): number {
+  if (item.block.t === 'p' && item.block.crop) return item.block.crop.h
+  return item.h ?? 40
+}
+
+/** Builds the right crop shape to persist for `item`'s block type --
+ *  PokemonBlock's crop carries its own frame height (`h`) alongside
+ *  ImageCrop, ImageBlock's doesn't need one (its frame is Item.h). */
+function cropPatch(item: Item, next: { s: number; ox: number; oy: number }): ImageCrop | (ImageCrop & { h: number }) | null {
+  if (item.block.t === 'i') return next
+  if (item.block.t === 'p' && item.block.crop) return { ...next, h: item.block.crop.h }
+  return null
 }
 
 /**
@@ -63,18 +88,25 @@ export function Canvas({ zoom }: { zoom: number }) {
   }, [croppingItemId])
 
   function enterCrop(item: Item) {
-    if (item.block.t !== 'i') return
+    if (item.block.t !== 'i' && item.block.t !== 'p') return
     beginGesture()
-    if (item.h === undefined) {
+    if (!getCrop(item)) {
       // Crop needs a fixed frame to pan/zoom within -- lock in whatever
-      // height the image currently renders at (its natural aspect at the
-      // item's width) rather than an arbitrary default.
+      // height the artwork currently renders at (its natural aspect at
+      // the item's width) rather than an arbitrary default. Works for
+      // both block types since each renders exactly one <img>.
       const imgEl = surfaceRef.current?.querySelector<HTMLElement>(`[data-item-id="${item.id}"] img`)
       const rectH = imgEl?.getBoundingClientRect().height
       const h = rectH ? Math.max(GRID_DOTS, snapToGrid(rectH / zoom)) : item.w
-      resizeItemLive(item.id, item.w, h)
+      if (item.block.t === 'i') {
+        // ImageBlock's frame IS the item box -- lock the item's own
+        // height (if not already fixed) rather than a separate field.
+        if (item.h === undefined) resizeItemLive(item.id, item.w, h)
+        cropItemLive(item.id, { s: 1, ox: 0, oy: 0 })
+      } else {
+        cropItemLive(item.id, { s: 1, ox: 0, oy: 0, h })
+      }
     }
-    if (!item.block.crop) cropItemLive(item.id, { s: 1, ox: 0, oy: 0 })
     select(item.id)
     setCropId(item.id)
   }
@@ -82,12 +114,14 @@ export function Canvas({ zoom }: { zoom: number }) {
   function onItemPointerDown(e: ReactPointerEvent, item: Item) {
     e.stopPropagation()
     select(item.id)
-    if (croppingItemId === item.id && item.block.t === 'i') {
-      beginGesture()
-      const crop = item.block.crop ?? { s: 1, ox: 0, oy: 0 }
-      cropDrag.current = { id: item.id, startX: e.clientX, startY: e.clientY, startOx: crop.ox, startOy: crop.oy, s: crop.s }
-      ;(e.target as Element).setPointerCapture(e.pointerId)
-      return
+    if (croppingItemId === item.id) {
+      const crop = getCrop(item)
+      if (crop) {
+        beginGesture()
+        cropDrag.current = { id: item.id, startX: e.clientX, startY: e.clientY, startOx: crop.ox, startOy: crop.oy, s: crop.s }
+        ;(e.target as Element).setPointerCapture(e.pointerId)
+        return
+      }
     }
     beginGesture()
     drag.current = { id: item.id, startX: e.clientX, startY: e.clientY, itemX: item.x, itemY: item.y }
@@ -139,17 +173,18 @@ export function Canvas({ zoom }: { zoom: number }) {
       }
     } else if (cropDrag.current) {
       const item = doc.items.find((it) => it.id === cropDrag.current!.id)
-      if (item && item.block.t === 'i') {
+      if (item) {
         const { s, startX, startY, startOx, startOy } = cropDrag.current
         const boxW = item.w * zoom
-        const boxH = (item.h ?? 40) * zoom
+        const boxH = cropFrameH(item) * zoom
         // The zoomed-in slack on each side is (s-1)/2 of the frame -- pan
         // is clamped there so the frame stays fully covered (see
-        // codec/types.ts's `crop` doc and render/nodes/Image.tsx).
+        // codec/types.ts's `crop` doc and render/cropStyle.ts).
         const maxOff = (s - 1) / 2
         const ox = clamp(startOx + (e.clientX - startX) / boxW, -maxOff, maxOff)
         const oy = clamp(startOy + (e.clientY - startY) / boxH, -maxOff, maxOff)
-        cropItemLive(item.id, { s, ox, oy })
+        const patch = cropPatch(item, { s, ox, oy })
+        if (patch) cropItemLive(item.id, patch)
       }
     }
   }
@@ -220,7 +255,11 @@ export function Canvas({ zoom }: { zoom: number }) {
                   left: item.x * zoom,
                   top: item.y * zoom,
                   width: item.w * zoom,
-                  height: (item.h ?? 40) * zoom,
+                  // While cropping, the hit box tracks the crop frame
+                  // (the artwork alone for PokemonBlock, whose caption
+                  // sits below it) rather than the item's full height, so
+                  // dragging anywhere over the photo pans it.
+                  height: (isCropping ? cropFrameH(item) : item.h ?? 40) * zoom,
                   border: item.id === selectedId ? `1.5px dashed ${ACCENT}` : '1.5px solid transparent',
                   cursor: isCropping ? 'grab' : 'move',
                   boxSizing: 'border-box',
@@ -311,26 +350,25 @@ export function Canvas({ zoom }: { zoom: number }) {
                   item={item}
                   zoom={zoom}
                   onDuplicate={() => duplicateItem(item.id)}
-                  onCrop={item.block.t === 'i' ? () => enterCrop(item) : undefined}
+                  onCrop={item.block.t === 'i' || item.block.t === 'p' ? () => enterCrop(item) : undefined}
                   onFront={() => bringToFront(item.id)}
                   onBack={() => sendToBack(item.id)}
                   onDelete={() => removeItem(item.id)}
                 />
               )}
 
-              {isCropping && item.block.t === 'i' && (
+              {isCropping && (item.block.t === 'i' || item.block.t === 'p') && (
                 <CropToolbar
                   item={item}
                   zoom={zoom}
-                  scale={item.block.crop?.s ?? 1}
+                  scale={getCrop(item)?.s ?? 1}
                   onZoom={(s) => {
-                    const crop = item.block.t === 'i' ? item.block.crop : undefined
+                    const crop = getCrop(item)
                     const maxOff = (s - 1) / 2
-                    cropItemLive(item.id, {
-                      s,
-                      ox: clamp(crop?.ox ?? 0, -maxOff, maxOff),
-                      oy: clamp(crop?.oy ?? 0, -maxOff, maxOff),
-                    })
+                    const ox = clamp(crop?.ox ?? 0, -maxOff, maxOff)
+                    const oy = clamp(crop?.oy ?? 0, -maxOff, maxOff)
+                    const patch = cropPatch(item, { s, ox, oy })
+                    if (patch) cropItemLive(item.id, patch)
                   }}
                   onZoomStart={beginGesture}
                   onDone={() => setCropId(null)}
@@ -420,10 +458,10 @@ function ItemToolbar({
   )
 }
 
-/** Replaces ItemToolbar while an image is being cropped: a zoom slider
- *  plus Done, anchored the same way (flips below when it doesn't fit
- *  above) but without the rotate handle's clearance, since the rotate
- *  handle itself is hidden during crop. */
+/** Replaces ItemToolbar while a photo (Image or Pokemon artwork) is
+ *  being cropped: a zoom slider plus Done, anchored the same way (flips
+ *  below when it doesn't fit above) but without the rotate handle's
+ *  clearance, since the rotate handle itself is hidden during crop. */
 function CropToolbar({
   item,
   zoom,

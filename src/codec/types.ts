@@ -25,10 +25,15 @@
  *          icon, 0|1 (IconBlock) -- same "filled vs outline" concept,
  *          reused deliberately
  *   fit = contain | cover | fill (ImageBlock)
- *   crop = { s, ox, oy }: cover-fit pan/zoom crop (ImageBlock) -- s is a
- *          zoom factor >=1 (1 = default cover fit), ox/oy are a pan
- *          offset as a fraction of the item box, each clamped to
- *          [-(s-1)/2, (s-1)/2] so the frame always stays fully covered
+ *   crop = { s, ox, oy[, h] }: cover-fit pan/zoom crop, cross-cutting
+ *          across every block backed by a raster photo (ImageBlock,
+ *          PokemonBlock) -- s is a zoom factor >=1 (1 = default cover
+ *          fit), ox/oy are a pan offset as a fraction of the crop frame,
+ *          each clamped to [-(s-1)/2, (s-1)/2] so the frame always stays
+ *          fully covered. On ImageBlock the frame IS the item box; on
+ *          PokemonBlock the artwork is only part of the item (the
+ *          name/number caption sits below it), so `h` locks that
+ *          sub-box's height in dots instead of reusing Item.h
  *   id = National Dex number (PokemonBlock)
  *   showName, showNumber = 0 | 1 (PokemonBlock)
  *   name = canonical icon name, e.g. "house" (IconBlock) -- editor UX
@@ -141,14 +146,26 @@ export interface BoxBlock {
  * TinyPrint's capture doesn't wait for it, the image just doesn't show
  * up. That trade-off is accepted deliberately, not an oversight.
  */
+/**
+ * A cover-fit pan/zoom crop, cross-cutting across every block backed by
+ * a raster photo -- see the reserved-keys note above for the field
+ * semantics and clamp math (shared by render/nodes/Image.tsx and
+ * Pokemon.tsx).
+ */
+export interface ImageCrop {
+  s: number
+  ox: number
+  oy: number
+}
+
 export interface ImageBlock {
   t: 'i'
   d: string
   fit?: 'contain' | 'cover' | 'fill'
   /** In-place pan/zoom crop, set via the editor's on-canvas crop tool.
-   *  When present, overrides `fit` with cover-based pan/zoom (see the
-   *  reserved-keys note above and render/nodes/Image.tsx). */
-  crop?: { s: number; ox: number; oy: number }
+   *  When present, overrides `fit` with cover-based pan/zoom. The frame
+   *  is the item's own box (Item.w x Item.h). */
+  crop?: ImageCrop
 }
 
 /**
@@ -168,6 +185,11 @@ export interface PokemonBlock {
   showName?: 0 | 1
   /** default 1 (shown) */
   showNumber?: 0 | 1
+  /** Same in-place pan/zoom crop as ImageBlock, but the artwork is only
+   *  part of the item (the name/number caption sits below it), so the
+   *  frame isn't Item.h -- `h` locks the artwork sub-box's own height in
+   *  dots instead. */
+  crop?: ImageCrop & { h: number }
 }
 
 /**

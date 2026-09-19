@@ -325,6 +325,18 @@ function PokemonFields({ block, onChange }: { block: PokemonBlock; onChange: (pa
         </span>
       </div>
 
+      {block.crop && (
+        <p style={{ fontSize: 11, color: '#888' }}>
+          Artwork cropped on the canvas (the Crop tool in its floating toolbar).{' '}
+          <button
+            onClick={() => onChange({ crop: undefined })}
+            style={{ font: 'inherit', color: '#c00', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+          >
+            Reset crop
+          </button>
+        </p>
+      )}
+
       <Field label="Show name">
         <input
           type="checkbox"
