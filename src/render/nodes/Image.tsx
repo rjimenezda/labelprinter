@@ -10,6 +10,12 @@ import { cropImgStyle } from '../cropStyle'
 export function Image({ block, height }: { block: ImageBlock; height: number | undefined }) {
   return (
     <img
+      // Keyed on the URL so a changed src always mounts a fresh <img> --
+      // otherwise a prior onError's imperative `visibility: hidden` (set
+      // directly on the DOM node, outside this style object) would stick
+      // around forever even after a later URL loads successfully, since
+      // React's style diffing only touches properties this object lists.
+      key={block.d}
       src={block.d}
       alt=""
       style={{

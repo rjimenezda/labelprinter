@@ -21,6 +21,10 @@ export function Pokemon({ block }: { block: PokemonBlock }) {
 
   const img = (
     <img
+      // Keyed on the URL -- see Image.tsx's doc comment on the same key
+      // for why: it stops a prior onError's imperative `visibility:
+      // hidden` from sticking around after a later id's artwork loads.
+      key={pokemonArtworkUrl(block.id)}
       src={pokemonArtworkUrl(block.id)}
       alt=""
       style={{
