@@ -241,12 +241,8 @@ export function Canvas({ zoom }: { zoom: number }) {
 
             {item.id === selectedId && (
               <ItemToolbar
-                x={item.x * zoom}
-                // Stacked above the rotate handle (itself above the item),
-                // so neither overlaps the other regardless of the item's
-                // current rotation (the handle rotates with the item; the
-                // toolbar deliberately doesn't, see its own doc comment).
-                top={item.y * zoom - ROTATE_HANDLE_OFFSET - TOOLBAR_GAP - TOOLBAR_HEIGHT}
+                item={item}
+                zoom={zoom}
                 onDuplicate={() => duplicateItem(item.id)}
                 onFront={() => bringToFront(item.id)}
                 onBack={() => sendToBack(item.id)}
@@ -264,23 +260,35 @@ const TOOLBAR_HEIGHT = 32
 const TOOLBAR_GAP = 6
 
 /**
- * Anchored to the item's unrotated top-left x (and a caller-computed top,
- * stacked above the rotate handle) rather than tracking rotated content --
- * simple and correct for the common rot=0 case; for a heavily rotated item
- * the toolbar sits over the item's stored frame rather than hugging its
- * rotated visual footprint, which is an accepted trade-off over the
- * complexity of computing a rotated bounding box.
+ * Anchored above the item by default (clearing the rotate handle), but
+ * flips to sit below it when there isn't enough room above -- an item
+ * near the top of the label would otherwise render partly above the
+ * canvas's own scroll area and get clipped/hidden behind the app's top
+ * bar.
+ */
+function toolbarTop(item: Item, zoom: number): number {
+  const above = item.y * zoom - ROTATE_HANDLE_OFFSET - TOOLBAR_GAP - TOOLBAR_HEIGHT
+  if (above >= 0) return above
+  return (item.y + (item.h ?? 40)) * zoom + TOOLBAR_GAP
+}
+
+/**
+ * Anchored to the item's unrotated top-left x -- rather than tracking
+ * rotated content, simple and correct for the common rot=0 case; for a
+ * heavily rotated item the toolbar sits over the item's stored frame
+ * rather than hugging its rotated visual footprint, which is an accepted
+ * trade-off over the complexity of computing a rotated bounding box.
  */
 function ItemToolbar({
-  x,
-  top,
+  item,
+  zoom,
   onDuplicate,
   onFront,
   onBack,
   onDelete,
 }: {
-  x: number
-  top: number
+  item: Item
+  zoom: number
   onDuplicate: () => void
   onFront: () => void
   onBack: () => void
@@ -295,8 +303,8 @@ function ItemToolbar({
       onPointerDown={(e) => e.stopPropagation()}
       style={{
         position: 'absolute',
-        left: x,
-        top,
+        left: item.x * zoom,
+        top: toolbarTop(item, zoom),
         display: 'flex',
         gap: 4,
         background: '#222',
